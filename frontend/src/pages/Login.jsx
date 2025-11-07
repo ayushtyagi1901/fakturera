@@ -1,66 +1,15 @@
 import { useState } from 'react'
+import Navbar from '../components/Navbar'
 import './Login.css'
 
 function Login() {
-  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false)
-  const [selectedLanguage, setSelectedLanguage] = useState('English')
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const languages = [
-    { code: 'sv', name: 'Svenska', flag: 'https://storage.123fakturere.no/public/flags/SE.png' },
-    { code: 'en', name: 'English', flag: 'https://storage.123fakturere.no/public/flags/GB.png' }
-  ]
-
-  const currentLang = languages.find(lang => lang.name === selectedLanguage) || languages[1]
-
-  const handleLanguageSelect = (language) => {
-    setSelectedLanguage(language.name)
-    setIsLangDropdownOpen(false)
-  }
-
   return (
     <div className="login-container">
-      <nav className="login-navbar">
-        <div className="login-navbar-content">
-          <img 
-            src="https://storage.123fakturera.se/public/icons/diamond.png" 
-            alt="123 Fakturera Logo" 
-            className="login-navbar-logo"
-          />
-          <div className="login-navbar-links">
-            <a href="#" className="login-navbar-link">Home</a>
-            <a href="#" className="login-navbar-link">Order</a>
-            <a href="#" className="login-navbar-link">Our Customers</a>
-            <a href="#" className="login-navbar-link">About us</a>
-            <a href="#" className="login-navbar-link">Contact Us</a>
-            <div className="login-language-switcher">
-              <button 
-                className="login-language-button"
-                onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-              >
-                <span>{currentLang.name}</span>
-                <img src={currentLang.flag} alt={currentLang.name} className="login-language-flag" />
-              </button>
-              {isLangDropdownOpen && (
-                <div className="login-language-dropdown">
-                  {languages.map((lang) => (
-                    <div
-                      key={lang.code}
-                      className="login-language-option"
-                      onClick={() => handleLanguageSelect(lang)}
-                    >
-                      <span>{lang.name}</span>
-                      <img src={lang.flag} alt={lang.name} className="login-language-flag" />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
       <div className="login-card">
         <h1 className="login-title">Log in</h1>
         
