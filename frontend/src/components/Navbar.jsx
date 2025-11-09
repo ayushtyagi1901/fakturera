@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { FaBars, FaTimes } from 'react-icons/fa'
 import '../pages/Login.css'
 
 function Navbar() {
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState('English')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const languages = [
     { code: 'sv', name: 'Svenska', flag: 'https://storage.123fakturere.no/public/flags/SE.png' },
@@ -17,6 +19,14 @@ function Navbar() {
     setIsLangDropdownOpen(false)
   }
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen)
+  }
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false)
+  }
+
   return (
     <nav className="login-navbar">
       <div className="login-navbar-content">
@@ -25,12 +35,31 @@ function Navbar() {
           alt="123 Fakturera Logo"
           className="login-navbar-logo"
         />
-        <div className="login-navbar-links">
-          <a href="/login/" className="login-navbar-link">Home</a>
-          <a href="/login/" className="login-navbar-link">Order</a>
-          <a href="/login/" className="login-navbar-link">Our Customers</a>
-          <a href="/terms/" className="login-navbar-link">About us</a>
-          <a href="/login/" className="login-navbar-link">Contact Us</a>
+        <button 
+          className="login-hamburger-menu"
+          onClick={toggleMobileMenu}
+          aria-label="Toggle menu"
+        >
+          {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
+        </button>
+        {isMobileMenuOpen && (
+          <div className="login-mobile-menu-overlay" onClick={closeMobileMenu}></div>
+        )}
+        <div className={`login-mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
+          <a href="/login/" className="login-mobile-link" onClick={closeMobileMenu}>Home</a>
+          <a href="/login/" className="login-mobile-link" onClick={closeMobileMenu}>Order</a>
+          <a href="/login/" className="login-mobile-link" onClick={closeMobileMenu}>Our Customers</a>
+          <a href="/terms/" className="login-mobile-link" onClick={closeMobileMenu}>About Us</a>
+          <a href="/login/" className="login-mobile-link" onClick={closeMobileMenu}>Contact Us</a>
+        </div>
+        <div className="login-navbar-right-group">
+          <div className="login-navbar-links">
+            <a href="/login/" className="login-navbar-link">Home</a>
+            <a href="/login/" className="login-navbar-link">Order</a>
+            <a href="/login/" className="login-navbar-link">Our Customers</a>
+            <a href="/terms/" className="login-navbar-link">About us</a>
+            <a href="/login/" className="login-navbar-link">Contact Us</a>
+          </div>
           <div className="login-language-switcher">
             <button
               type="button"

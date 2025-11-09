@@ -48,6 +48,13 @@
 .login-navbar-links {
   display: flex;
   align-items: center;
+  margin-right: 0;
+}
+
+.login-navbar-right-group {
+  display: flex;
+  align-items: center;
+  gap: 0;
 }
 
 .login-navbar-link {
@@ -67,6 +74,7 @@
 
 .login-language-switcher {
   position: relative;
+  margin-left: 0;
 }
 
 .login-language-button {
@@ -326,5 +334,488 @@
   font-size: 16px;
   margin: 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  /* Hide footer on mobile */
+  .login-footer {
+    display: none;
+  }
+
+  /* Hide logo on mobile */
+  .login-navbar-logo {
+    display: none;
+  }
+
+  /* Hide desktop navbar links on mobile */
+  .login-navbar-links {
+    display: none !important;
+    order: 2;
+  }
+
+  /* Make right group container not interfere with flexbox on mobile */
+  .login-navbar-right-group {
+    display: contents;
+  }
+
+  /* Show hamburger menu button */
+  .login-hamburger-menu {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    transition: opacity 0.2s;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    position: relative;
+    order: 1;
+    visibility: visible;
+    opacity: 1;
+    align-self: center;
+  }
+
+  .login-hamburger-menu:hover {
+    opacity: 0.8;
+  }
+
+  .login-hamburger-menu svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Cove/compartment below hamburger */
+  .login-hamburger-menu::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: transparent;
+    z-index: 101;
+  }
+
+  /* Mobile menu overlay with backdrop blur */
+  .login-mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 98;
+    opacity: 1;
+    animation: fadeInOverlay 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity;
+  }
+
+  @keyframes fadeInOverlay {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Mobile menu appears from cove below hamburger icon */
+  .login-mobile-menu {
+    position: fixed;
+    top: 70px;
+    left: 40px;
+    right: 12px;
+    width: auto;
+    max-width: calc(70vw - 40px);
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 4px 0 8px rgba(0, 0, 0, 0.1);
+    border-radius: 0;
+    z-index: 99;
+    display: flex !important;
+    flex-direction: column;
+    max-height: 0;
+    padding: 0 24px;
+    transform: translate3d(0, -100%, 0);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                padding-top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                padding-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0.4s ease-in-out;
+    overflow: hidden;
+    visibility: hidden;
+    opacity: 1;
+    will-change: transform, max-height;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .login-mobile-menu.open {
+    transform: translate3d(0, 0, 0);
+    max-height: 600px;
+    padding-top: 32px;
+    padding-bottom: 32px;
+    visibility: visible;
+  }
+
+  .login-mobile-link {
+    color: #333;
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 400;
+    font-family: "Open Sans", sans-serif;
+    padding: 20px 0;
+    border-bottom: none;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .login-mobile-menu.open .login-mobile-link {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .login-mobile-menu.open .login-mobile-link:nth-child(1) {
+    transition-delay: 0.05s;
+  }
+
+  .login-mobile-menu.open .login-mobile-link:nth-child(2) {
+    transition-delay: 0.1s;
+  }
+
+  .login-mobile-menu.open .login-mobile-link:nth-child(3) {
+    transition-delay: 0.15s;
+  }
+
+  .login-mobile-menu.open .login-mobile-link:nth-child(4) {
+    transition-delay: 0.2s;
+  }
+
+  .login-mobile-menu.open .login-mobile-link:nth-child(5) {
+    transition-delay: 0.25s;
+  }
+
+  .login-mobile-link:hover {
+    color: #107EE9;
+  }
+
+  .login-mobile-link:last-child {
+    padding-bottom: 20px;
+  }
+
+  /* Keep language switcher visible on mobile */
+  .login-language-switcher {
+    display: flex !important;
+    align-items: center;
+    position: relative;
+    z-index: 101;
+    order: 2;
+    visibility: visible;
+    opacity: 1;
+    align-self: center;
+    margin-left: auto;
+  }
+
+  /* Adjust navbar content for mobile */
+  .login-navbar-content {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 20px;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    flex-wrap: nowrap;
+    display: flex;
+  }
+
+  /* Adjust login card for mobile */
+  .login-card {
+    width: 90%;
+    min-width: 300px;
+    padding: 2rem;
+    margin-top: 80px;
+  }
+
+  .login-links {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+/* Tablet Responsive Styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Show footer on tablet */
+  .login-footer {
+    display: flex;
+  }
+
+  /* Hide logo on tablet */
+  .login-navbar-logo {
+    display: none;
+  }
+
+  /* Hide desktop navbar links on tablet */
+  .login-navbar-links {
+    display: none !important;
+  }
+
+  /* Make right group container not interfere with flexbox on tablet */
+  .login-navbar-right-group {
+    display: contents;
+  }
+
+  /* Show hamburger menu button on tablet */
+  .login-hamburger-menu {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 26px;
+    cursor: pointer;
+    padding: 10px;
+    transition: opacity 0.2s;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    position: relative;
+    order: 1;
+    visibility: visible;
+    opacity: 1;
+    align-self: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .login-hamburger-menu:hover {
+    opacity: 0.8;
+  }
+
+  .login-hamburger-menu svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  /* Keep language switcher visible on tablet */
+  .login-language-switcher {
+    display: flex !important;
+    align-items: center;
+    position: relative;
+    z-index: 101;
+    order: 2;
+    visibility: visible;
+    opacity: 1;
+    align-self: center;
+    margin-left: auto;
+  }
+
+  .login-language-button {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 16px;
+  }
+
+  /* Adjust navbar content for tablet */
+  .login-navbar-content {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 24px 50px;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    flex-wrap: nowrap;
+    display: flex;
+  }
+
+  /* Adjust login card for tablet */
+  .login-card {
+    width: 66%;
+    min-width: 400px;
+    max-width: 605px;
+    padding: 2.5rem;
+    margin-top: 60px;
+  }
+
+  .login-links {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+
+  /* Adjust footer for tablet */
+  .login-footer-top {
+    width: calc(100% - 120px);
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .login-footer-brand {
+    font-size: 28px;
+  }
+
+  .login-footer-buttons {
+    gap: 18px;
+  }
+
+  .login-footer-btn {
+    font-size: 15px;
+    padding: 8px 12px;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .login-footer-line {
+    width: calc(100% - 120px);
+  }
+
+  .login-footer p {
+    font-size: 15px;
+  }
+
+  /* Mobile menu overlay for tablet */
+  .login-mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 98;
+    opacity: 1;
+    animation: fadeInOverlayTablet 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity;
+    display: block;
+  }
+
+  @keyframes fadeInOverlayTablet {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Mobile menu adjustments for tablet */
+  .login-mobile-menu {
+    position: fixed;
+    top: 74px;
+    left: 50px;
+    right: 20px;
+    width: auto;
+    max-width: calc(65vw - 50px);
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 4px 0 8px rgba(0, 0, 0, 0.1);
+    border-radius: 0;
+    z-index: 99;
+    display: flex !important;
+    flex-direction: column;
+    max-height: 0;
+    padding: 0 28px;
+    transform: translate3d(0, -100%, 0);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                padding-top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                padding-bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                visibility 0.4s ease-in-out;
+    overflow: hidden;
+    visibility: hidden;
+    opacity: 1;
+    will-change: transform, max-height;
+    backface-visibility: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .login-mobile-menu.open {
+    transform: translate3d(0, 0, 0);
+    max-height: 600px;
+    padding-top: 36px;
+    padding-bottom: 36px;
+    visibility: visible;
+  }
+
+  .login-mobile-link {
+    color: #333;
+    text-decoration: none;
+    font-size: 19px;
+    font-weight: 400;
+    font-family: "Open Sans", sans-serif;
+    padding: 22px 0;
+    border-bottom: none;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  .login-mobile-menu.open .login-mobile-link {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .login-mobile-menu.open .login-mobile-link:nth-child(1) {
+    transition-delay: 0.05s;
+  }
+
+  .login-mobile-menu.open .login-mobile-link:nth-child(2) {
+    transition-delay: 0.1s;
+  }
+
+  .login-mobile-menu.open .login-mobile-link:nth-child(3) {
+    transition-delay: 0.15s;
+  }
+
+  .login-mobile-menu.open .login-mobile-link:nth-child(4) {
+    transition-delay: 0.2s;
+  }
+
+  .login-mobile-menu.open .login-mobile-link:nth-child(5) {
+    transition-delay: 0.25s;
+  }
+
+  .login-mobile-link:hover {
+    color: #107EE9;
+  }
+
+  .login-mobile-link:last-child {
+    padding-bottom: 22px;
+  }
+}
+
+/* Desktop: Hide hamburger menu */
+@media (min-width: 1025px) {
+  .login-hamburger-menu {
+    display: none !important;
+  }
+}
+
+/* Desktop: Hide mobile menu and overlay */
+@media (min-width: 1025px) {
+  .login-mobile-menu {
+    display: none !important;
+  }
+
+  .login-mobile-menu-overlay {
+    display: none !important;
+  }
 }
 
