@@ -1,0 +1,368 @@
+.dashboard-container {
+  width: 100%;
+  height: 100vh;
+  background: white;
+  margin: 0;
+  padding: 0;
+}
+
+.dashboard-header {
+  width: 100%;
+  background: #107EE9;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 10rem;
+  box-sizing: border-box;
+}
+
+.dashboard-header-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+}
+
+.dashboard-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.dashboard-profile-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+}
+
+.dashboard-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-user-name {
+  font-size: 16px;
+  color: white;
+  font-family: "Open Sans", sans-serif;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.dashboard-user-post {
+  font-size: 14px;
+  color: white;
+  font-family: "Open Sans", sans-serif;
+  font-weight: 400;
+  line-height: 1.2;
+  opacity: 0.9;
+}
+
+.dashboard-language-switcher {
+  position: relative;
+}
+
+.dashboard-language-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: "Open Sans", sans-serif;
+  transition: all 0.2s;
+}
+
+.dashboard-language-button:hover {
+  opacity: 0.8;
+}
+
+.dashboard-language-flag {
+  width: 20px;
+  height: 15px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+.dashboard-language-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 150px;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.dashboard-language-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: "Open Sans", sans-serif;
+  color: #333;
+  transition: background 0.2s;
+}
+
+.dashboard-language-option:hover {
+  background: #f5f5f5;
+}
+
+.dashboard-content {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 80px);
+}
+
+.dashboard-sidebar {
+  width: 280px;
+  background: white;
+  border-right: 1px solid #e0e0e0;
+  padding: 20px 0;
+  overflow-y: auto;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-menu-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+  font-family: "Open Sans", sans-serif;
+  padding: 0 20px;
+  margin: 0 0 20px 0;
+  text-align: center;
+  position: relative;
+}
+
+.dashboard-menu-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 75%;
+  height: 2px;
+  background: #107EE9;
+}
+
+.dashboard-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dashboard-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px 12px 40px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: "Open Sans", sans-serif;
+  color: #333;
+  font-size: 14px;
+  position: relative;
+}
+
+.dashboard-menu-indicator {
+  position: absolute;
+  left: 12px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #5A9F25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dashboard-menu-check {
+  color: white;
+  font-size: 12px;
+}
+
+.dashboard-menu-item:hover {
+  background: #e9ecef;
+}
+
+.dashboard-menu-icon {
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+  color: #107EE9;
+  flex-shrink: 0;
+}
+
+.dashboard-main {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.dashboard-search-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.dashboard-first-search-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+}
+
+.dashboard-search-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin-left: 40px;
+}
+
+.dashboard-action-buttons {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+  margin-right: 100px;
+}
+
+.dashboard-search-bar {
+  width: 100%;
+  height: 40px;
+  padding: 0 45px 0 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  font-size: 14px;
+  font-family: "Open Sans", sans-serif;
+  color: #333;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.dashboard-search-bar:focus {
+  outline: none;
+  border-color: #107EE9;
+}
+
+.dashboard-search-bar::placeholder {
+  color: #999;
+}
+
+.dashboard-search-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #87CEEB;
+  font-size: 16px;
+  pointer-events: none;
+}
+
+.dashboard-action-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  font-size: 14px;
+  font-family: "Open Sans", sans-serif;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.dashboard-action-button:hover {
+  background: #f5f5f5;
+  border-color: #107EE9;
+  color: #107EE9;
+}
+
+.dashboard-action-button:hover .dashboard-action-icon {
+  color: #107EE9;
+}
+
+.dashboard-action-icon {
+  font-size: 14px;
+  color: inherit;
+  transition: color 0.2s;
+}
+
+.dashboard-table-container {
+  margin-top: 30px;
+  margin-left: 40px;
+  width: calc(100% - 80px);
+  overflow-x: auto;
+}
+
+.dashboard-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 8px;
+  border: none;
+}
+
+.dashboard-table thead th {
+  padding: 12px 16px;
+  background: transparent;
+  border-radius: 20px;
+  border: none;
+  font-size: 14px;
+  font-family: "Open Sans", sans-serif;
+  color: #333;
+  text-align: left;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.dashboard-sortable-header {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.dashboard-sortable-header span {
+  display: inline-block;
+  white-space: nowrap;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.dashboard-sortable-header:hover {
+  opacity: 0.7;
+}
+
+.dashboard-sort-icon {
+  font-size: 12px;
+  color: #87CEEB;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 0;
+}
+
+.dashboard-table tbody td {
+  padding: 12px 16px;
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #E0E0E0;
+  font-size: 14px;
+  font-family: "Open Sans", sans-serif;
+  color: #333;
+  text-align: left;
+  font-weight: 400;
+}
+
