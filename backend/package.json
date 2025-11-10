@@ -1,0 +1,28 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "Backend API for Fakturera",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "migrate": "node -e \"import('./src/utils/migrate.js').then(m => m.runMigrations().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); }))\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "api",
+    "backend",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "pg": "^8.16.3",
+    "swagger-jsdoc": "^6.2.8"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

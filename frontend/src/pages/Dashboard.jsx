@@ -1,68 +1,223 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FaFileInvoice, FaUsers, FaBuilding, FaBook, FaListAlt, FaFileInvoiceDollar, FaExclamationCircle, FaGift, FaBoxes, FaUserCheck, FaExchangeAlt, FaSignOutAlt, FaCheck, FaSearch, FaPlus, FaPrint, FaCog, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa'
+import { useLanguage } from '../contexts/LanguageContext'
 import './Dashboard.css'
 import './Login.css'
 
+// Frontend-only translations for dashboard UI
+const dashboardTranslations = {
+  en: {
+    menu: {
+      title: 'Menu',
+      invoices: 'Invoices',
+      customers: 'customers',
+      businesses: 'My businesses',
+      journal: 'Invoice journal',
+      price_list: 'Price list',
+      multiple_invoicing: 'Multiple invoicing',
+      unpaid: 'Unpaid invoices',
+      offer: 'Offer',
+      inventory: 'Inventory Control',
+      member: 'Member Invoicing',
+      import_export: 'Import/export',
+      logout: 'Log out'
+    },
+    search: {
+      article_no: 'Search article no',
+      product: 'Search product'
+    },
+    button: {
+      new_product: 'New Product',
+      print_list: 'Print List',
+      advanced_mode: 'Advanced Mode'
+    },
+    table: {
+      article_no: 'Article no',
+      product_service: 'product/service',
+      in_price: 'In Price',
+      price: 'Price',
+      unit: 'Unit',
+      in_stock: 'In Stock',
+      description: 'Description'
+    }
+  },
+  sv: {
+    menu: {
+      title: 'Meny',
+      invoices: 'Fakturor',
+      customers: 'kunder',
+      businesses: 'Mina företag',
+      journal: 'Fakturajournal',
+      price_list: 'Prislista',
+      multiple_invoicing: 'Multipla faktureringar',
+      unpaid: 'Obetalda fakturor',
+      offer: 'Offert',
+      inventory: 'Lagerstyrning',
+      member: 'Medlemsfakturering',
+      import_export: 'Import/export',
+      logout: 'Logga ut'
+    },
+    search: {
+      article_no: 'Sök artikelnr',
+      product: 'Sök produkt'
+    },
+    button: {
+      new_product: 'Ny produkt',
+      print_list: 'Skriv ut lista',
+      advanced_mode: 'Avancerat läge'
+    },
+    table: {
+      article_no: 'Artikelnr',
+      product_service: 'produkt/tjänst',
+      in_price: 'Inköpspris',
+      price: 'Pris',
+      unit: 'Enhet',
+      in_stock: 'I lager',
+      description: 'Beskrivning'
+    }
+  }
+}
+
 function Dashboard() {
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false)
-  const [selectedLanguage, setSelectedLanguage] = useState('English')
+  const { languages, currentLang, handleLanguageSelect, currentLangCode } = useLanguage()
   const [activeMenu, setActiveMenu] = useState('Price list')
-  const [sortColumn, setSortColumn] = useState(null)
+  const [sortColumn, setSortColumn] = useState('article_no')
   const [sortDirection, setSortDirection] = useState('asc')
-  
-  const [tableData, setTableData] = useState([
-    { articleNo: 'ART001', productService: 'Product A', inPrice: 100.00, price: 150.00, unit: 'pcs', inStock: 50, description: 'Sample product description' },
-    { articleNo: 'ART002', productService: 'Service B', inPrice: 200.00, price: 250.00, unit: 'hrs', inStock: 'N/A', description: 'Sample service description' },
-    { articleNo: 'ART003', productService: 'Product C', inPrice: 50.00, price: 75.00, unit: 'pcs', inStock: 100, description: 'Another product description' },
-    { articleNo: 'ART004', productService: 'Service D', inPrice: 300.00, price: 400.00, unit: 'hrs', inStock: 'N/A', description: 'Another service description' },
-  ])
+  const [allProducts, setAllProducts] = useState([]) // Store all products for filtering
+  const [tableData, setTableData] = useState([]) // Filtered products to display
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [articleNoSearch, setArticleNoSearch] = useState('')
+  const [productSearch, setProductSearch] = useState('')
 
-  const languages = [
-    { code: 'sv', name: 'Svenska', flag: 'https://storage.123fakturere.no/public/flags/SE.png' },
-    { code: 'en', name: 'English', flag: 'https://storage.123fakturere.no/public/flags/GB.png' }
-  ]
+  // Get translations from local object based on current language
+  const getTranslation = (key) => {
+    const keys = key.split('.')
+    let value = dashboardTranslations[currentLangCode]
+    for (const k of keys) {
+      value = value?.[k]
+    }
+    return value || key
+  }
 
-  const currentLang = languages.find((lang) => lang.name === selectedLanguage) || languages[1]
+  // Filter products based on search inputs
+  const applyFilters = (products, articleNoFilter, productFilter) => {
+    let filtered = [...products]
+    
+    // Filter by article number
+    if (articleNoFilter.trim()) {
+      filtered = filtered.filter(product =>
+        product.articleNo.toLowerCase().includes(articleNoFilter.toLowerCase().trim())
+      )
+    }
+    
+    // Filter by product/service name
+    if (productFilter.trim()) {
+      filtered = filtered.filter(product =>
+        product.productService.toLowerCase().includes(productFilter.toLowerCase().trim())
+      )
+    }
+    
+    setTableData(filtered)
+  }
 
-  const handleLanguageSelect = (language) => {
-    setSelectedLanguage(language.name)
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        // Map frontend column names to API sort parameters
+        let sortParam = 'article_no';
+        if (sortColumn === 'name') {
+          sortParam = 'name';
+        } else if (sortColumn === 'article_no') {
+          sortParam = 'article_no';
+        }
+        
+        const response = await fetch(
+          `http://localhost:3001/api/products?lang=${currentLangCode}&sort=${sortParam}&order=${sortDirection}`
+        )
+        if (!response.ok) {
+          throw new Error(`Failed to fetch products: ${response.statusText}`)
+        }
+        const data = await response.json()
+        
+        // Transform API data to match component structure
+        const transformedData = data.products.map(product => ({
+          id: product.id,
+          articleNo: product.article_no,
+          productService: product.name,
+          inPrice: product.in_price ? parseFloat(product.in_price) : null,
+          price: parseFloat(product.price),
+          unit: product.unit,
+          inStock: product.in_stock,
+          description: product.description
+        }))
+        
+        setAllProducts(transformedData)
+        // Apply filters to the new data
+        applyFilters(transformedData, articleNoSearch, productSearch)
+      } catch (err) {
+        console.error('Error fetching products:', err)
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProducts()
+  }, [currentLangCode, sortColumn, sortDirection])
+
+  // Reset search when language changes
+  useEffect(() => {
+    setArticleNoSearch('')
+    setProductSearch('')
+  }, [currentLangCode])
+
+  // Handle article number search
+  const handleArticleNoSearch = (e) => {
+    const value = e.target.value
+    setArticleNoSearch(value)
+    applyFilters(allProducts, value, productSearch)
+  }
+
+  // Handle product search
+  const handleProductSearch = (e) => {
+    const value = e.target.value
+    setProductSearch(value)
+    applyFilters(allProducts, articleNoSearch, value)
+  }
+
+  const handleLanguageClick = (language) => {
+    handleLanguageSelect(language)
     setIsLangDropdownOpen(false)
   }
 
   const handleSort = (column) => {
     let newDirection = 'asc'
+    // Map frontend column names to API column names
+    let apiColumn = 'article_no';
+    if (column === 'productService') {
+      apiColumn = 'name';
+    } else if (column === 'articleNo') {
+      apiColumn = 'article_no';
+    }
     
-    if (sortColumn === column) {
+    if (sortColumn === apiColumn) {
       // Toggle direction if same column
       newDirection = sortDirection === 'asc' ? 'desc' : 'asc'
     }
     
-    setSortColumn(column)
+    setSortColumn(apiColumn)
     setSortDirection(newDirection)
-
-    const sortedData = [...tableData].sort((a, b) => {
-      let aValue, bValue
-
-      if (column === 'articleNo') {
-        // Extract numeric part for numerical sorting
-        aValue = parseInt(a.articleNo.replace(/\D/g, '')) || 0
-        bValue = parseInt(b.articleNo.replace(/\D/g, '')) || 0
-      } else if (column === 'productService') {
-        // Alphabetical sorting
-        aValue = a.productService.toLowerCase()
-        bValue = b.productService.toLowerCase()
-      }
-
-      if (aValue < bValue) return newDirection === 'asc' ? -1 : 1
-      if (aValue > bValue) return newDirection === 'asc' ? 1 : -1
-      return 0
-    })
-
-    setTableData(sortedData)
+    // Data will be refetched via useEffect
   }
 
   const getSortIcon = (column) => {
-    if (sortColumn !== column) {
+    const apiColumn = column === 'articleNo' ? 'article_no' : 'name'
+    if (sortColumn !== apiColumn) {
       return <FaSort className="dashboard-sort-icon" />
     }
     return sortDirection === 'asc' 
@@ -100,7 +255,7 @@ function Dashboard() {
                   <div
                     key={lang.code}
                     className="dashboard-language-option"
-                    onClick={() => handleLanguageSelect(lang)}
+                    onClick={() => handleLanguageClick(lang)}
                   >
                     <span>{lang.name}</span>
                     <img src={lang.flag} alt={lang.name} className="dashboard-language-flag" />
@@ -114,7 +269,7 @@ function Dashboard() {
 
       <div className="dashboard-content">
         <aside className="dashboard-sidebar">
-          <h2 className="dashboard-menu-title">Menu</h2>
+          <h2 className="dashboard-menu-title">{getTranslation('menu.title')}</h2>
           <nav className="dashboard-menu">
             <div className={`dashboard-menu-item ${activeMenu === 'Invoices' ? 'active' : ''}`} onClick={() => setActiveMenu('Invoices')}>
               {activeMenu === 'Invoices' && (
@@ -123,7 +278,7 @@ function Dashboard() {
                 </div>
               )}
               <FaFileInvoice className="dashboard-menu-icon" />
-              <span>Invoices</span>
+              <span>{getTranslation('menu.invoices')}</span>
             </div>
             <div className={`dashboard-menu-item ${activeMenu === 'customers' ? 'active' : ''}`} onClick={() => setActiveMenu('customers')}>
               {activeMenu === 'customers' && (
@@ -132,7 +287,7 @@ function Dashboard() {
                 </div>
               )}
               <FaUsers className="dashboard-menu-icon" />
-              <span>customers</span>
+              <span>{getTranslation('menu.customers')}</span>
             </div>
             <div className={`dashboard-menu-item ${activeMenu === 'My businesses' ? 'active' : ''}`} onClick={() => setActiveMenu('My businesses')}>
               {activeMenu === 'My businesses' && (
@@ -141,7 +296,7 @@ function Dashboard() {
                 </div>
               )}
               <FaBuilding className="dashboard-menu-icon" />
-              <span>My businesses</span>
+              <span>{getTranslation('menu.businesses')}</span>
             </div>
             <div className={`dashboard-menu-item ${activeMenu === 'Invoice journal' ? 'active' : ''}`} onClick={() => setActiveMenu('Invoice journal')}>
               {activeMenu === 'Invoice journal' && (
@@ -150,7 +305,7 @@ function Dashboard() {
                 </div>
               )}
               <FaBook className="dashboard-menu-icon" />
-              <span>Invoice journal</span>
+              <span>{getTranslation('menu.journal')}</span>
             </div>
             <div className={`dashboard-menu-item ${activeMenu === 'Price list' ? 'active' : ''}`} onClick={() => setActiveMenu('Price list')}>
               {activeMenu === 'Price list' && (
@@ -159,7 +314,7 @@ function Dashboard() {
                 </div>
               )}
               <FaListAlt className="dashboard-menu-icon" />
-              <span>Price list</span>
+              <span>{getTranslation('menu.price_list')}</span>
             </div>
             <div className={`dashboard-menu-item ${activeMenu === 'Multiple invoicing' ? 'active' : ''}`} onClick={() => setActiveMenu('Multiple invoicing')}>
               {activeMenu === 'Multiple invoicing' && (
@@ -168,7 +323,7 @@ function Dashboard() {
                 </div>
               )}
               <FaFileInvoiceDollar className="dashboard-menu-icon" />
-              <span>Multiple invoicing</span>
+              <span>{getTranslation('menu.multiple_invoicing')}</span>
             </div>
             <div className={`dashboard-menu-item ${activeMenu === 'Unpaid invoices' ? 'active' : ''}`} onClick={() => setActiveMenu('Unpaid invoices')}>
               {activeMenu === 'Unpaid invoices' && (
@@ -177,7 +332,7 @@ function Dashboard() {
                 </div>
               )}
               <FaExclamationCircle className="dashboard-menu-icon" />
-              <span>Unpaid invoices</span>
+              <span>{getTranslation('menu.unpaid')}</span>
             </div>
             <div className={`dashboard-menu-item ${activeMenu === 'Offer' ? 'active' : ''}`} onClick={() => setActiveMenu('Offer')}>
               {activeMenu === 'Offer' && (
@@ -186,7 +341,7 @@ function Dashboard() {
                 </div>
               )}
               <FaGift className="dashboard-menu-icon" />
-              <span>Offer</span>
+              <span>{getTranslation('menu.offer')}</span>
             </div>
             <div className={`dashboard-menu-item ${activeMenu === 'Inventory Control' ? 'active' : ''}`} onClick={() => setActiveMenu('Inventory Control')}>
               {activeMenu === 'Inventory Control' && (
@@ -195,7 +350,7 @@ function Dashboard() {
                 </div>
               )}
               <FaBoxes className="dashboard-menu-icon" />
-              <span>Inventory Control</span>
+              <span>{getTranslation('menu.inventory')}</span>
             </div>
             <div className={`dashboard-menu-item ${activeMenu === 'Member Invoicing' ? 'active' : ''}`} onClick={() => setActiveMenu('Member Invoicing')}>
               {activeMenu === 'Member Invoicing' && (
@@ -204,7 +359,7 @@ function Dashboard() {
                 </div>
               )}
               <FaUserCheck className="dashboard-menu-icon" />
-              <span>Member Invoicing</span>
+              <span>{getTranslation('menu.member')}</span>
             </div>
             <div className={`dashboard-menu-item ${activeMenu === 'Import/export' ? 'active' : ''}`} onClick={() => setActiveMenu('Import/export')}>
               {activeMenu === 'Import/export' && (
@@ -213,7 +368,7 @@ function Dashboard() {
                 </div>
               )}
               <FaExchangeAlt className="dashboard-menu-icon" />
-              <span>Import/export</span>
+              <span>{getTranslation('menu.import_export')}</span>
             </div>
             <div className={`dashboard-menu-item ${activeMenu === 'Log out' ? 'active' : ''}`} onClick={() => setActiveMenu('Log out')}>
               {activeMenu === 'Log out' && (
@@ -222,7 +377,7 @@ function Dashboard() {
                 </div>
               )}
               <FaSignOutAlt className="dashboard-menu-icon" />
-              <span>Log out</span>
+              <span>{getTranslation('menu.logout')}</span>
             </div>
           </nav>
         </aside>
@@ -233,21 +388,23 @@ function Dashboard() {
                 <input
                   type="text"
                   className="dashboard-search-bar"
-                  placeholder="Search article no"
+                  placeholder={getTranslation('search.article_no')}
+                  value={articleNoSearch}
+                  onChange={handleArticleNoSearch}
                 />
                 <FaSearch className="dashboard-search-icon" />
               </div>
               <div className="dashboard-action-buttons">
                 <button className="dashboard-action-button">
-                  <span>New Product</span>
+                  <span>{getTranslation('button.new_product')}</span>
                   <FaPlus className="dashboard-action-icon" />
                 </button>
                 <button className="dashboard-action-button">
-                  <span>Print List</span>
+                  <span>{getTranslation('button.print_list')}</span>
                   <FaPrint className="dashboard-action-icon" />
                 </button>
                 <button className="dashboard-action-button">
-                  <span>Advanced Mode</span>
+                  <span>{getTranslation('button.advanced_mode')}</span>
                   <FaCog className="dashboard-action-icon" />
                 </button>
               </div>
@@ -256,7 +413,9 @@ function Dashboard() {
               <input
                 type="text"
                 className="dashboard-search-bar"
-                placeholder="Search product"
+                placeholder={getTranslation('search.product')}
+                value={productSearch}
+                onChange={handleProductSearch}
               />
               <FaSearch className="dashboard-search-icon" />
             </div>
@@ -266,30 +425,51 @@ function Dashboard() {
               <thead>
                 <tr>
                   <th className="dashboard-sortable-header" onClick={() => handleSort('articleNo')}>
-                    <span>Article no</span>
+                    <span>{getTranslation('table.article_no')}</span>
                     {getSortIcon('articleNo')}
                   </th>
                   <th className="dashboard-sortable-header" onClick={() => handleSort('productService')}>
-                    <span>product/service</span>
+                    <span>{getTranslation('table.product_service')}</span>
                     {getSortIcon('productService')}
                   </th>
-                  <th>In Price</th>
-                  <th>Price</th>
-                  <th>Unit</th>
-                  <th>In Stock</th>
-                  <th>Description</th>
+                  <th>{getTranslation('table.in_price')}</th>
+                  <th>{getTranslation('table.price')}</th>
+                  <th>{getTranslation('table.unit')}</th>
+                  <th>{getTranslation('table.in_stock')}</th>
+                  <th>{getTranslation('table.description')}</th>
                 </tr>
               </thead>
               <tbody>
-                {tableData.map((row, index) => (
-                  <tr key={index}>
+                {loading && (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>
+                      Loading products...
+                    </td>
+                  </tr>
+                )}
+                {error && (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: 'center', padding: '20px', color: 'red' }}>
+                      Error: {error}
+                    </td>
+                  </tr>
+                )}
+                {!loading && !error && tableData.length === 0 && (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>
+                      No products found
+                    </td>
+                  </tr>
+                )}
+                {!loading && !error && tableData.map((row) => (
+                  <tr key={row.id}>
                     <td>{row.articleNo}</td>
                     <td>{row.productService}</td>
-                    <td>{row.inPrice}</td>
-                    <td>{row.price}</td>
-                    <td>{row.unit}</td>
+                    <td>{row.inPrice !== null && row.inPrice !== undefined ? Number(row.inPrice).toFixed(2) : '-'}</td>
+                    <td>{Number(row.price).toFixed(2)}</td>
+                    <td>{row.unit || '-'}</td>
                     <td>{row.inStock}</td>
-                    <td>{row.description}</td>
+                    <td>{row.description || '-'}</td>
                   </tr>
                 ))}
               </tbody>

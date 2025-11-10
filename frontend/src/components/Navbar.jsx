@@ -1,21 +1,38 @@
 import { useState } from 'react'
 import { FaBars, FaTimes } from 'react-icons/fa'
+import { useLanguage } from '../contexts/LanguageContext'
 import '../pages/Login.css'
+
+// Frontend-only translations for navbar
+const navbarTranslations = {
+  en: {
+    home: 'Home',
+    order: 'Order',
+    customers: 'Our Customers',
+    about: 'About Us',
+    contact: 'Contact Us'
+  },
+  sv: {
+    home: 'Hem',
+    order: 'Beställ',
+    customers: 'Våra kunder',
+    about: 'Om oss',
+    contact: 'Kontakta oss'
+  }
+}
 
 function Navbar() {
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false)
-  const [selectedLanguage, setSelectedLanguage] = useState('English')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { languages, currentLang, handleLanguageSelect, currentLangCode } = useLanguage()
 
-  const languages = [
-    { code: 'sv', name: 'Svenska', flag: 'https://storage.123fakturere.no/public/flags/SE.png' },
-    { code: 'en', name: 'English', flag: 'https://storage.123fakturere.no/public/flags/GB.png' }
-  ]
+  // Get translations from local object based on current language
+  const getNavTranslation = (key) => {
+    return navbarTranslations[currentLangCode]?.[key] || key
+  }
 
-  const currentLang = languages.find((lang) => lang.name === selectedLanguage) || languages[1]
-
-  const handleLanguageSelect = (language) => {
-    setSelectedLanguage(language.name)
+  const handleLanguageClick = (language) => {
+    handleLanguageSelect(language)
     setIsLangDropdownOpen(false)
   }
 
@@ -46,19 +63,19 @@ function Navbar() {
           <div className="login-mobile-menu-overlay" onClick={closeMobileMenu}></div>
         )}
         <div className={`login-mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
-          <a href="/login/" className="login-mobile-link" onClick={closeMobileMenu}>Home</a>
-          <a href="/login/" className="login-mobile-link" onClick={closeMobileMenu}>Order</a>
-          <a href="/login/" className="login-mobile-link" onClick={closeMobileMenu}>Our Customers</a>
-          <a href="/terms/" className="login-mobile-link" onClick={closeMobileMenu}>About Us</a>
-          <a href="/login/" className="login-mobile-link" onClick={closeMobileMenu}>Contact Us</a>
+          <a href="/login/" className="login-mobile-link" onClick={closeMobileMenu}>{getNavTranslation('home')}</a>
+          <a href="/login/" className="login-mobile-link" onClick={closeMobileMenu}>{getNavTranslation('order')}</a>
+          <a href="/login/" className="login-mobile-link" onClick={closeMobileMenu}>{getNavTranslation('customers')}</a>
+          <a href="/terms/" className="login-mobile-link" onClick={closeMobileMenu}>{getNavTranslation('about')}</a>
+          <a href="/login/" className="login-mobile-link" onClick={closeMobileMenu}>{getNavTranslation('contact')}</a>
         </div>
         <div className="login-navbar-right-group">
           <div className="login-navbar-links">
-            <a href="/login/" className="login-navbar-link">Home</a>
-            <a href="/login/" className="login-navbar-link">Order</a>
-            <a href="/login/" className="login-navbar-link">Our Customers</a>
-            <a href="/terms/" className="login-navbar-link">About us</a>
-            <a href="/login/" className="login-navbar-link">Contact Us</a>
+            <a href="/login/" className="login-navbar-link">{getNavTranslation('home')}</a>
+            <a href="/login/" className="login-navbar-link">{getNavTranslation('order')}</a>
+            <a href="/login/" className="login-navbar-link">{getNavTranslation('customers')}</a>
+            <a href="/terms/" className="login-navbar-link">{getNavTranslation('about')}</a>
+            <a href="/login/" className="login-navbar-link">{getNavTranslation('contact')}</a>
           </div>
           <div className="login-language-switcher">
             <button
@@ -75,7 +92,7 @@ function Navbar() {
                   <div
                     key={lang.code}
                     className="login-language-option"
-                    onClick={() => handleLanguageSelect(lang)}
+                    onClick={() => handleLanguageClick(lang)}
                   >
                     <span>{lang.name}</span>
                     <img src={lang.flag} alt={lang.name} className="login-language-flag" />
