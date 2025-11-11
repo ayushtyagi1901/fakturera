@@ -89,8 +89,14 @@ chown -R "$DEPLOY_USER:$DEPLOY_USER" "$APP_DIR"
 echo -e "${GREEN}Step 10: Clone Repository${NC}"
 if [ ! -d "$APP_DIR/.git" ]; then
     sudo -u "$DEPLOY_USER" git clone "$REPO_URL" "$APP_DIR"
+    # Fix git ownership
+    chown -R "$DEPLOY_USER:$DEPLOY_USER" "$APP_DIR/.git"
 else
     cd "$APP_DIR"
+    # Fix git ownership
+    chown -R "$DEPLOY_USER:$DEPLOY_USER" "$APP_DIR/.git"
+    # Add safe directory for git
+    sudo -u "$DEPLOY_USER" git config --global --add safe.directory "$APP_DIR" || true
     # Stash or discard local changes to allow pull
     sudo -u "$DEPLOY_USER" git stash || true
     sudo -u "$DEPLOY_USER" git reset --hard origin/main || true

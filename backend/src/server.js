@@ -106,7 +106,25 @@ function handleRequest(req, res, parsedUrl, pathname, method) {
 
   // Swagger JSON endpoint
   if (pathname === '/swagger.json') {
-    sendResponse(res, 200, swaggerSpec);
+    // Dynamically set server URL based on request host
+    const host = req.headers.host || 'localhost:3000';
+    const protocol = req.headers['x-forwarded-proto'] || (req.connection?.encrypted ? 'https' : 'http');
+    const baseUrl = `${protocol}://${host}`;
+    
+    // Clone swagger spec and update server URLs
+    const dynamicSwaggerSpec = JSON.parse(JSON.stringify(swaggerSpec));
+    dynamicSwaggerSpec.servers = [
+      {
+        url: baseUrl,
+        description: 'Current server'
+      },
+      {
+        url: `http://localhost:${process.env.PORT || 3000}`,
+        description: 'Local development'
+      }
+    ];
+    
+    sendResponse(res, 200, dynamicSwaggerSpec);
     return;
   }
 
