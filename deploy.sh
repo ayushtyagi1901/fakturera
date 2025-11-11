@@ -86,7 +86,7 @@ mkdir -p "$APP_DIR/backups"
 mkdir -p "$APP_DIR/logs"
 chown -R "$DEPLOY_USER:$DEPLOY_USER" "$APP_DIR"
 
-echo -e "${GREEN}Step 10: Clone Repository${NC}"
+echo -e "${GREEN}Step 10: Clone/Update Repository${NC}"
 if [ ! -d "$APP_DIR/.git" ]; then
     sudo -u "$DEPLOY_USER" git clone "$REPO_URL" "$APP_DIR"
     # Fix git ownership
@@ -97,20 +97,33 @@ else
     chown -R "$DEPLOY_USER:$DEPLOY_USER" "$APP_DIR/.git"
     # Add safe directory for git
     sudo -u "$DEPLOY_USER" git config --global --add safe.directory "$APP_DIR" || true
-    # Stash or discard local changes to allow pull
-    sudo -u "$DEPLOY_USER" git stash || true
-    sudo -u "$DEPLOY_USER" git reset --hard origin/main || true
-    sudo -u "$DEPLOY_USER" git pull
+    # Fetch latest changes
+    sudo -u "$DEPLOY_USER" git fetch origin || true
+    # Try to pull, but don't fail if there are conflicts
+    sudo -u "$DEPLOY_USER" git pull origin main || echo -e "${YELLOW}⚠️  Git pull had issues, continuing...${NC}"
 fi
 
-echo -e "${GREEN}Step 11: Create Environment Files${NC}"
+echo -e "${GREEN}Step 11: Create/Update Environment Files${NC}"
 
-# Generate passwords
-DB_PASSWORD_VAL=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
-JWT_SECRET_VAL=$(openssl rand -base64 64 | tr -d "=+/" | cut -c1-50)
+# Preserve existing passwords if .env files exist
+if [ -f "$APP_DIR/backend/.env" ]; then
+    echo -e "${YELLOW}⚠️  Backend .env exists, preserving existing values${NC}"
+    # Extract existing values
+    EXISTING_DB_PASSWORD=$(grep "^DB_PASSWORD=" "$APP_DIR/backend/.env" | cut -d '=' -f2- || echo "")
+    EXISTING_JWT_SECRET=$(grep "^JWT_SECRET=" "$APP_DIR/backend/.env" | cut -d '=' -f2- || echo "")
+    
+    # Use existing or generate new
+    DB_PASSWORD_VAL="${EXISTING_DB_PASSWORD:-$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)}"
+    JWT_SECRET_VAL="${EXISTING_JWT_SECRET:-$(openssl rand -base64 64 | tr -d "=+/" | cut -c1-50)}"
+else
+    # Generate new passwords
+    DB_PASSWORD_VAL=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
+    JWT_SECRET_VAL=$(openssl rand -base64 64 | tr -d "=+/" | cut -c1-50)
+fi
 
-# Backend .env
-cat > "$APP_DIR/backend/.env" <<EOF
+# Backend .env - only create if doesn't exist, or update non-sensitive values
+if [ ! -f "$APP_DIR/backend/.env" ]; then
+    cat > "$APP_DIR/backend/.env" <<EOF
 NODE_ENV=production
 PORT=3000
 DB_HOST=postgres
@@ -121,24 +134,53 @@ DB_PASSWORD=${DB_PASSWORD_VAL}
 JWT_SECRET=${JWT_SECRET_VAL}
 JWT_EXPIRES_IN=24h
 EOF
+else
+    # Update only if values are missing
+    if ! grep -q "^NODE_ENV=" "$APP_DIR/backend/.env"; then
+        echo "NODE_ENV=production" >> "$APP_DIR/backend/.env"
+    fi
+    if ! grep -q "^PORT=" "$APP_DIR/backend/.env"; then
+        echo "PORT=3000" >> "$APP_DIR/backend/.env"
+    fi
+    if ! grep -q "^DB_HOST=" "$APP_DIR/backend/.env"; then
+        echo "DB_HOST=postgres" >> "$APP_DIR/backend/.env"
+    fi
+fi
 
-# Root .env for docker-compose (Docker Compose automatically reads this)
-cat > "$APP_DIR/.env" <<EOF
+# Root .env for docker-compose - preserve if exists
+if [ ! -f "$APP_DIR/.env" ]; then
+    cat > "$APP_DIR/.env" <<EOF
 DB_NAME=fakturera
 DB_USER=fakturera_user
 DB_PASSWORD=${DB_PASSWORD_VAL}
 EOF
+fi
 
-# Frontend .env
-cat > "$APP_DIR/frontend/.env" <<EOF
+# Frontend .env - update API URL if domain changed, but preserve if exists
+if [ ! -f "$APP_DIR/frontend/.env" ]; then
+    cat > "$APP_DIR/frontend/.env" <<EOF
 VITE_API_URL=https://${DOMAIN}/api
 EOF
+else
+    # Update API URL if it's still the default
+    if grep -q "your-domain.com" "$APP_DIR/frontend/.env" || ! grep -q "VITE_API_URL" "$APP_DIR/frontend/.env"; then
+        sed -i "s|VITE_API_URL=.*|VITE_API_URL=https://${DOMAIN}/api|" "$APP_DIR/frontend/.env" || \
+        echo "VITE_API_URL=https://${DOMAIN}/api" > "$APP_DIR/frontend/.env"
+    fi
+fi
 
-# Backup script env
-cat > "$APP_DIR/.backup-env" <<EOF
+# Backup script env - preserve if exists
+if [ ! -f "$APP_DIR/.backup-env" ]; then
+    cat > "$APP_DIR/.backup-env" <<EOF
 GCS_BUCKET=${GCS_BUCKET}
 DB_PASSWORD=${DB_PASSWORD_VAL}
 EOF
+else
+    # Update GCS bucket if changed
+    if ! grep -q "^GCS_BUCKET=" "$APP_DIR/.backup-env"; then
+        echo "GCS_BUCKET=${GCS_BUCKET}" >> "$APP_DIR/.backup-env"
+    fi
+fi
 
 chown -R "$DEPLOY_USER:$DEPLOY_USER" "$APP_DIR"
 
@@ -194,6 +236,17 @@ server {
     
     # API proxy
     location /api {
+        # Handle preflight OPTIONS requests
+        if (\$request_method = 'OPTIONS') {
+            add_header Access-Control-Allow-Origin * always;
+            add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always;
+            add_header Access-Control-Allow-Headers "Content-Type, Authorization" always;
+            add_header Access-Control-Max-Age 3600;
+            add_header Content-Type 'text/plain charset=UTF-8';
+            add_header Content-Length 0;
+            return 204;
+        }
+        
         proxy_pass http://localhost:3000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
@@ -205,6 +258,11 @@ server {
         proxy_cache_bypass \$http_upgrade;
         proxy_read_timeout 300s;
         proxy_connect_timeout 75s;
+        
+        # CORS headers for actual requests
+        add_header Access-Control-Allow-Origin * always;
+        add_header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS" always;
+        add_header Access-Control-Allow-Headers "Content-Type, Authorization" always;
     }
     
     # Health check endpoint
@@ -227,8 +285,21 @@ fi
 
 echo -e "${GREEN}Step 14: Build Frontend${NC}"
 cd "$APP_DIR/frontend"
-sudo -u "$DEPLOY_USER" npm install
-sudo -u "$DEPLOY_USER" npm run build
+# Only rebuild if .env changed or dist doesn't exist
+REBUILD_NEEDED=false
+if [ ! -d "$APP_DIR/frontend/dist" ]; then
+    REBUILD_NEEDED=true
+elif [ "$APP_DIR/frontend/.env" -nt "$APP_DIR/frontend/dist" ]; then
+    REBUILD_NEEDED=true
+fi
+
+if [ "$REBUILD_NEEDED" = true ] || [ "${FORCE_REBUILD:-false}" = "true" ]; then
+    echo -e "${YELLOW}Rebuilding frontend...${NC}"
+    sudo -u "$DEPLOY_USER" npm install
+    sudo -u "$DEPLOY_USER" npm run build
+else
+    echo -e "${YELLOW}Frontend already built, skipping... (use FORCE_REBUILD=true to force)${NC}"
+fi
 
 echo -e "${GREEN}Step 15: Setup Docker Compose${NC}"
 cd "$APP_DIR"
@@ -313,6 +384,79 @@ HEALTH_EOF
 chmod +x "$APP_DIR/health-check.sh"
 chown "$DEPLOY_USER:$DEPLOY_USER" "$APP_DIR/health-check.sh"
 
+echo -e "${GREEN}Step 17.5: Setup Update Env Helper Script${NC}"
+if [ -f "$APP_DIR/update-env.sh" ]; then
+    echo -e "${YELLOW}⚠️  update-env.sh already exists, updating...${NC}"
+fi
+cat > "$APP_DIR/update-env.sh" <<'UPDATE_ENV_EOF'
+#!/bin/bash
+# Helper script to update .env files on the deployed server
+# Usage: sudo bash update-env.sh [backend|frontend|root]
+
+set -e
+
+APP_DIR="/opt/fakturera"
+DEPLOY_USER="deployer"
+
+if [ "$EUID" -ne 0 ]; then 
+    echo "❌ Please run as root/sudo"
+    exit 1
+fi
+
+ENV_TYPE="${1:-backend}"
+
+case "$ENV_TYPE" in
+    backend)
+        ENV_FILE="$APP_DIR/backend/.env"
+        echo "📝 Opening backend .env file: $ENV_FILE"
+        echo "   (Owned by $DEPLOY_USER user)"
+        ;;
+    frontend)
+        ENV_FILE="$APP_DIR/frontend/.env"
+        echo "📝 Opening frontend .env file: $ENV_FILE"
+        echo "   (Owned by $DEPLOY_USER user)"
+        ;;
+    root)
+        ENV_FILE="$APP_DIR/.env"
+        echo "📝 Opening root .env file: $ENV_FILE"
+        echo "   (Owned by $DEPLOY_USER user)"
+        ;;
+    *)
+        echo "❌ Invalid option: $ENV_TYPE"
+        echo "Usage: sudo bash update-env.sh [backend|frontend|root]"
+        exit 1
+        ;;
+esac
+
+if [ ! -f "$ENV_FILE" ]; then
+    echo "❌ File not found: $ENV_FILE"
+    exit 1
+fi
+
+# Check current editor
+EDITOR="${EDITOR:-nano}"
+
+echo ""
+echo "💡 Tip: After editing, you may need to:"
+echo "   - Restart backend: cd $APP_DIR && sudo -u $DEPLOY_USER docker-compose restart backend"
+echo "   - Rebuild frontend: cd $APP_DIR/frontend && sudo -u $DEPLOY_USER npm run build"
+echo ""
+echo "Press Enter to open the file..."
+read
+
+# Edit the file as the deployer user to maintain permissions
+sudo -u "$DEPLOY_USER" "$EDITOR" "$ENV_FILE"
+
+echo ""
+echo "✅ File updated successfully!"
+echo ""
+echo "Current file permissions:"
+ls -la "$ENV_FILE"
+UPDATE_ENV_EOF
+
+chmod +x "$APP_DIR/update-env.sh"
+chown "$DEPLOY_USER:$DEPLOY_USER" "$APP_DIR/update-env.sh"
+
 echo -e "${GREEN}Step 18: Setup Cron Jobs${NC}"
 cat > /etc/cron.d/fakturera <<CRON_EOF
 # Daily database backup at 2 AM
@@ -386,9 +530,16 @@ SYSTEMD_EOF
 systemctl daemon-reload
 systemctl enable fakturera
 
-echo -e "${GREEN}Step 23: Start Application${NC}"
+echo -e "${GREEN}Step 23: Start/Restart Application${NC}"
 cd "$APP_DIR"
-sudo -u "$DEPLOY_USER" docker-compose up -d --build
+# Check if containers are already running
+if sudo -u "$DEPLOY_USER" docker-compose ps | grep -q "Up"; then
+    echo -e "${YELLOW}Containers already running, restarting...${NC}"
+    sudo -u "$DEPLOY_USER" docker-compose restart
+else
+    echo -e "${YELLOW}Starting containers...${NC}"
+    sudo -u "$DEPLOY_USER" docker-compose up -d --build
+fi
 
 echo -e "${GREEN}Step 24: Wait for services to be ready${NC}"
 sleep 10
