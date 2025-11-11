@@ -4,6 +4,9 @@ set -e
 # Production Deployment Script for Fakturera
 # Run as: sudo bash deploy.sh
 
+# Set non-interactive mode for package installations
+export DEBIAN_FRONTEND=noninteractive
+
 echo "🚀 Starting Fakturera Production Deployment..."
 
 # Colors for output
@@ -177,16 +180,22 @@ ln -sf /etc/nginx/sites-available/fakturera /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default
 nginx -t && systemctl reload nginx
 
-echo -e "${GREEN}Step 13: Build Frontend${NC}"
+echo -e "${GREEN}Step 13: Install Node.js${NC}"
+if ! command -v node &> /dev/null; then
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    apt-get install -y nodejs
+fi
+
+echo -e "${GREEN}Step 14: Build Frontend${NC}"
 cd "$APP_DIR/frontend"
 sudo -u "$DEPLOY_USER" npm install
 sudo -u "$DEPLOY_USER" npm run build
 
-echo -e "${GREEN}Step 14: Setup Docker Compose${NC}"
+echo -e "${GREEN}Step 15: Setup Docker Compose${NC}"
 cd "$APP_DIR"
 # docker-compose.yml will be created separately
 
-echo -e "${GREEN}Step 15: Setup Backup Script${NC}"
+echo -e "${GREEN}Step 16: Setup Backup Script${NC}"
 cat > "$APP_DIR/backup-db.sh" <<'BACKUP_EOF'
 #!/bin/bash
 set -e
@@ -224,7 +233,7 @@ BACKUP_EOF
 chmod +x "$APP_DIR/backup-db.sh"
 chown "$DEPLOY_USER:$DEPLOY_USER" "$APP_DIR/backup-db.sh"
 
-echo -e "${GREEN}Step 16: Setup Health Check Script${NC}"
+echo -e "${GREEN}Step 17: Setup Health Check Script${NC}"
 cat > "$APP_DIR/health-check.sh" <<'HEALTH_EOF'
 #!/bin/bash
 
@@ -265,7 +274,7 @@ HEALTH_EOF
 chmod +x "$APP_DIR/health-check.sh"
 chown "$DEPLOY_USER:$DEPLOY_USER" "$APP_DIR/health-check.sh"
 
-echo -e "${GREEN}Step 17: Setup Cron Jobs${NC}"
+echo -e "${GREEN}Step 18: Setup Cron Jobs${NC}"
 cat > /etc/cron.d/fakturera <<CRON_EOF
 # Daily database backup at 2 AM
 0 2 * * * $DEPLOY_USER $APP_DIR/backup-db.sh >> $APP_DIR/logs/backup.log 2>&1
@@ -277,7 +286,7 @@ cat > /etc/cron.d/fakturera <<CRON_EOF
 0 0 * * 0 $DEPLOY_USER find $APP_DIR/logs -name "*.log" -mtime +30 -delete
 CRON_EOF
 
-echo -e "${GREEN}Step 18: Setup Log Rotation${NC}"
+echo -e "${GREEN}Step 19: Setup Log Rotation${NC}"
 cat > /etc/logrotate.d/fakturera <<LOGROTATE_EOF
 $APP_DIR/logs/*.log {
     daily
@@ -290,7 +299,7 @@ $APP_DIR/logs/*.log {
 }
 LOGROTATE_EOF
 
-echo -e "${GREEN}Step 19: Configure Firewall${NC}"
+echo -e "${GREEN}Step 20: Configure Firewall${NC}"
 ufw --force enable
 ufw default deny incoming
 ufw default allow outgoing
@@ -298,12 +307,24 @@ ufw allow 22/tcp
 ufw allow 80/tcp
 ufw allow 443/tcp
 
-echo -e "${GREEN}Step 20: Secure SSH${NC}"
+echo -e "${GREEN}Step 21: Secure SSH${NC}"
+# Backup original config
+cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
+
+# Apply security settings
 sed -i 's/#PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config
 sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
-systemctl restart sshd
 
-echo -e "${GREEN}Step 21: Setup Systemd Service${NC}"
+# Only restart if config is valid
+if sshd -t; then
+    systemctl restart sshd
+else
+    echo -e "${YELLOW}⚠️  SSH config test failed, restoring backup${NC}"
+    cp /etc/ssh/sshd_config.backup /etc/ssh/sshd_config
+    systemctl restart sshd
+fi
+
+echo -e "${GREEN}Step 22: Setup Systemd Service${NC}"
 cat > /etc/systemd/system/fakturera.service <<SYSTEMD_EOF
 [Unit]
 Description=Fakturera Application
@@ -326,14 +347,14 @@ SYSTEMD_EOF
 systemctl daemon-reload
 systemctl enable fakturera
 
-echo -e "${GREEN}Step 22: Start Application${NC}"
+echo -e "${GREEN}Step 23: Start Application${NC}"
 cd "$APP_DIR"
 sudo -u "$DEPLOY_USER" docker-compose up -d --build
 
-echo -e "${GREEN}Step 23: Wait for services to be ready${NC}"
+echo -e "${GREEN}Step 24: Wait for services to be ready${NC}"
 sleep 10
 
-echo -e "${GREEN}Step 24: Run database migrations${NC}"
+echo -e "${GREEN}Step 25: Run database migrations${NC}"
 cd "$APP_DIR/backend"
 sudo -u "$DEPLOY_USER" docker-compose exec -T backend npm run migrate || echo "Migrations may have already run"
 
