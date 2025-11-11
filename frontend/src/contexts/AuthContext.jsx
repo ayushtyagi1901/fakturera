@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import API_URL from '../config/api.js'
 
 const AuthContext = createContext()
 
@@ -7,13 +8,12 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // Check if token is valid on mount
   useEffect(() => {
     const checkAuth = async () => {
       const storedToken = localStorage.getItem('token')
       if (storedToken) {
         try {
-          const response = await fetch('http://localhost:3001/api/auth/verify', {
+          const response = await fetch(`${API_URL}/api/auth/verify`, {
             headers: {
               'Authorization': `Bearer ${storedToken}`
             }
@@ -24,7 +24,6 @@ export function AuthProvider({ children }) {
             setToken(storedToken)
             setUser(data.user)
           } else {
-            // Token is invalid, clear it
             localStorage.removeItem('token')
             setToken(null)
             setUser(null)
@@ -44,7 +43,7 @@ export function AuthProvider({ children }) {
 
   const login = async (username, password) => {
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
+      const response = await fetch(`${API_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

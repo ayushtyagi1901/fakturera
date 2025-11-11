@@ -1,9 +1,6 @@
 import { sendResponse, sendError } from '../utils/response.js';
 import { selectOne } from '../utils/db.js';
 
-/**
- * Terms routes handler
- */
 export function termsRoutes(req, res, parsedUrl, pathname, method) {
   /**
    * @swagger
@@ -40,10 +37,8 @@ export function termsRoutes(req, res, parsedUrl, pathname, method) {
    *         description: Database error
    */
   if (pathname === '/api/terms' && method === 'GET') {
-    // Get language from query parameter, default to 'en'
     const languageCode = parsedUrl.query?.lang || 'en';
     
-    // Validate language code
     const validLanguages = ['en', 'sv'];
     if (!validLanguages.includes(languageCode)) {
       sendError(res, 400, 'Invalid Language', 
@@ -53,7 +48,6 @@ export function termsRoutes(req, res, parsedUrl, pathname, method) {
       return;
     }
 
-    // Query database for terms content
     selectOne(
       'SELECT language_code, content, updated_at FROM terms WHERE language_code = $1',
       [languageCode]
@@ -78,7 +72,6 @@ export function termsRoutes(req, res, parsedUrl, pathname, method) {
     return;
   }
 
-  // 404 for terms routes
   sendError(res, 404, 'Not Found', `Route ${pathname} not found`);
 }
 

@@ -5,7 +5,6 @@ import { useLanguage } from '../contexts/LanguageContext'
 import { useAuth } from '../contexts/AuthContext'
 import './Login.css'
 
-// Frontend-only translations for login page UI
 const loginTranslations = {
   en: {
     title: 'Log in',
@@ -53,7 +52,6 @@ function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Get translations from local object based on current language
   const getLoginTranslation = (key) => {
     return loginTranslations[currentLangCode]?.[key] || loginTranslations.en[key] || key
   }

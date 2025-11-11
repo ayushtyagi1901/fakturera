@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { useLanguage } from '../contexts/LanguageContext'
+import API_URL from '../config/api.js'
 import './Terms.css'
 import './Login.css'
 
-// Frontend-only translations for terms page UI
 const termsTranslations = {
   en: {
     title: 'Terms and Conditions',
@@ -24,7 +24,6 @@ function Terms() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Get translations from local object based on current language
   const getTermsTranslation = (key) => {
     return termsTranslations[currentLangCode]?.[key] || key
   }
@@ -34,7 +33,7 @@ function Terms() {
       setLoading(true)
       setError(null)
       try {
-        const response = await fetch(`http://localhost:3001/api/terms?lang=${currentLangCode}`)
+        const response = await fetch(`${API_URL}/api/terms?lang=${currentLangCode}`)
         if (!response.ok) {
           throw new Error(`Failed to fetch terms: ${response.statusText}`)
         }

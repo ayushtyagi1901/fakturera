@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { FaFileInvoice, FaUsers, FaBuilding, FaBook, FaListAlt, FaFileInvoiceDollar, FaExclamationCircle, FaGift, FaBoxes, FaUserCheck, FaExchangeAlt, FaSignOutAlt, FaCheck, FaSearch, FaPlus, FaPrint, FaCog, FaSort, FaSortUp, FaSortDown, FaBars } from 'react-icons/fa'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useAuth } from '../contexts/AuthContext'
+import API_URL from '../config/api.js'
 import './Dashboard.css'
 import './Login.css'
 
-// Frontend-only translations for dashboard UI
 const dashboardTranslations = {
   en: {
     menu: {
@@ -88,19 +88,18 @@ function Dashboard() {
   const [activeMenu, setActiveMenu] = useState('Price list')
   const [sortColumn, setSortColumn] = useState('article_no')
   const [sortDirection, setSortDirection] = useState('asc')
-  const [allProducts, setAllProducts] = useState([]) // Store all products for filtering
-  const [tableData, setTableData] = useState([]) // Filtered products to display
+  const [allProducts, setAllProducts] = useState([])
+  const [tableData, setTableData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [articleNoSearch, setArticleNoSearch] = useState('')
   const [productSearch, setProductSearch] = useState('')
-  const [editingCell, setEditingCell] = useState(null) // { rowId, field }
+  const [editingCell, setEditingCell] = useState(null)
   const [editingValue, setEditingValue] = useState('')
   const [saving, setSaving] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
 
-  // Detect viewport size
   useEffect(() => {
     const checkViewport = () => {
       const width = window.innerWidth
@@ -113,7 +112,6 @@ function Dashboard() {
     return () => window.removeEventListener('resize', checkViewport)
   }, [])
 
-  // Get translations from local object based on current language
   const getTranslation = (key) => {
     const keys = key.split('.')
     let value = dashboardTranslations[currentLangCode]
@@ -123,18 +121,15 @@ function Dashboard() {
     return value || key
   }
 
-  // Filter products based on search inputs
   const applyFilters = (products, articleNoFilter, productFilter) => {
     let filtered = [...products]
     
-    // Filter by article number
     if (articleNoFilter.trim()) {
       filtered = filtered.filter(product =>
         product.articleNo.toLowerCase().includes(articleNoFilter.toLowerCase().trim())
       )
     }
     
-    // Filter by product/service name
     if (productFilter.trim()) {
       filtered = filtered.filter(product =>
         product.productService.toLowerCase().includes(productFilter.toLowerCase().trim())
@@ -144,13 +139,11 @@ function Dashboard() {
     setTableData(filtered)
   }
 
-  // Fetch products from API
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true)
       setError(null)
       try {
-        // Map frontend column names to API sort parameters
         let sortParam = 'article_no';
         if (sortColumn === 'name') {
           sortParam = 'name';
@@ -159,7 +152,7 @@ function Dashboard() {
         }
         
         const response = await fetch(
-          `http://localhost:3001/api/products?lang=${currentLangCode}&sort=${sortParam}&order=${sortDirection}`,
+          `${API_URL}/api/products?lang=${currentLangCode}&sort=${sortParam}&order=${sortDirection}`,
           {
             headers: {
               'Authorization': `Bearer ${token}`
@@ -167,7 +160,6 @@ function Dashboard() {
           }
         )
         if (!response.ok) {
-          // If unauthorized, logout and redirect to login
           if (response.status === 401) {
             logout()
             navigate('/login/')
@@ -177,7 +169,6 @@ function Dashboard() {
         }
         const data = await response.json()
         
-        // Transform API data to match component structure
         const transformedData = data.products.map(product => ({
           id: product.id,
           articleNo: product.article_no,
@@ -190,7 +181,6 @@ function Dashboard() {
         }))
         
         setAllProducts(transformedData)
-        // Apply filters to the new data
         applyFilters(transformedData, articleNoSearch, productSearch)
       } catch (err) {
         console.error('Error fetching products:', err)
@@ -203,13 +193,11 @@ function Dashboard() {
     fetchProducts()
   }, [currentLangCode, sortColumn, sortDirection, token, logout, navigate])
 
-  // Reset search when language changes
   useEffect(() => {
     setArticleNoSearch('')
     setProductSearch('')
   }, [currentLangCode])
 
-  // Handle article number search
   const handleArticleNoSearch = (e) => {
     const value = e.target.value
     setArticleNoSearch(value)
@@ -230,7 +218,6 @@ function Dashboard() {
 
   const handleSort = (column) => {
     let newDirection = 'asc'
-    // Map frontend column names to API column names
     let apiColumn = 'article_no';
     if (column === 'productService') {
       apiColumn = 'name';
@@ -239,13 +226,11 @@ function Dashboard() {
     }
     
     if (sortColumn === apiColumn) {
-      // Toggle direction if same column
       newDirection = sortDirection === 'asc' ? 'desc' : 'asc'
     }
     
     setSortColumn(apiColumn)
     setSortDirection(newDirection)
-    // Data will be refetched via useEffect
   }
 
   const getSortIcon = (column) => {
@@ -258,10 +243,8 @@ function Dashboard() {
       : <FaSortDown className="dashboard-sort-icon" />
   }
 
-  // Handle cell edit start
   const handleCellEdit = (rowId, field, displayValue) => {
     setEditingCell({ rowId, field })
-    // Get the actual value from the row, not the display value
     const row = tableData.find(r => r.id === rowId)
     if (!row) return
     
@@ -273,23 +256,19 @@ function Dashboard() {
     }
   }
 
-  // Handle cell edit cancel
   const handleCellCancel = () => {
     setEditingCell(null)
     setEditingValue('')
   }
 
-  // Handle cell save
   const handleCellSave = async (rowId, field) => {
     if (saving) return
 
     setSaving(true)
     try {
-      // Prepare update payload based on field
       const updatePayload = {}
       let value = editingValue
 
-      // Convert value based on field type
       if (field === 'inPrice' || field === 'price') {
         value = value === '' ? null : parseFloat(value)
         if (isNaN(value) && value !== null) {
@@ -306,7 +285,6 @@ function Dashboard() {
         }
       }
 
-      // Map frontend field names to API field names
       const fieldMap = {
         'productService': 'name',
         'inPrice': 'in_price',
@@ -319,7 +297,7 @@ function Dashboard() {
       updatePayload[fieldMap[field]] = value
 
       const response = await fetch(
-        `http://localhost:3001/api/products/${rowId}?lang=${currentLangCode}`,
+        `${API_URL}/api/products/${rowId}?lang=${currentLangCode}`,
         {
           method: 'PUT',
           headers: {
@@ -341,7 +319,6 @@ function Dashboard() {
 
       const data = await response.json()
       
-      // Update local state
       const updatedProducts = allProducts.map(product => {
         if (product.id === rowId) {
           const updated = { ...product }
@@ -375,12 +352,10 @@ function Dashboard() {
     }
   }
 
-  // Render editable cell
   const renderEditableCell = (row, field, displayValue) => {
     const isEditing = editingCell?.rowId === row.id && editingCell?.field === field
-    const isReadOnly = field === 'articleNo' // Article number is read-only
+    const isReadOnly = field === 'articleNo'
     
-    // Map field to CSS class for tablet hiding
     const fieldClassMap = {
       'articleNo': 'dashboard-col-article',
       'productService': 'dashboard-col-product',

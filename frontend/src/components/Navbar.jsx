@@ -3,7 +3,6 @@ import { FaBars, FaTimes } from 'react-icons/fa'
 import { useLanguage } from '../contexts/LanguageContext'
 import '../pages/Login.css'
 
-// Frontend-only translations for navbar
 const navbarTranslations = {
   en: {
     home: 'Home',
@@ -26,7 +25,6 @@ function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { languages, currentLang, handleLanguageSelect, currentLangCode } = useLanguage()
 
-  // Get translations from local object based on current language
   const getNavTranslation = (key) => {
     return navbarTranslations[currentLangCode]?.[key] || key
   }

@@ -6,7 +6,6 @@ import Terms from './pages/Terms'
 import Dashboard from './pages/Dashboard'
 import './App.css'
 
-// Protected route component
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth()
 

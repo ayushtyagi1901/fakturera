@@ -2,9 +2,6 @@ import { sendResponse, sendError } from '../utils/response.js';
 import { select, selectOne } from '../utils/db.js';
 import { query } from '../config/database.js';
 
-/**
- * Products/Dashboard routes handler
- */
 export function productsRoutes(req, res, parsedUrl, pathname, method) {
   /**
    * @swagger
@@ -73,10 +70,8 @@ export function productsRoutes(req, res, parsedUrl, pathname, method) {
    *         description: Database error
    */
   if (pathname === '/api/products' && method === 'GET') {
-    // Get language from query parameter, default to 'en'
     const languageCode = parsedUrl.query?.lang || 'en';
     
-    // Validate language code
     const validLanguages = ['en', 'sv'];
     if (!validLanguages.includes(languageCode)) {
       sendError(res, 400, 'Invalid Language', 
@@ -86,11 +81,9 @@ export function productsRoutes(req, res, parsedUrl, pathname, method) {
       return;
     }
 
-    // Get sort parameters
     const sortColumn = parsedUrl.query?.sort || 'article_no';
     const sortOrder = parsedUrl.query?.order || 'asc';
     
-    // Validate sort column
     const validSortColumns = ['article_no', 'name'];
     if (!validSortColumns.includes(sortColumn)) {
       sendError(res, 400, 'Invalid Sort Column', 
@@ -100,7 +93,6 @@ export function productsRoutes(req, res, parsedUrl, pathname, method) {
       return;
     }
 
-    // Validate sort order
     const validSortOrders = ['asc', 'desc'];
     if (!validSortOrders.includes(sortOrder.toLowerCase())) {
       sendError(res, 400, 'Invalid Sort Order', 
@@ -110,25 +102,19 @@ export function productsRoutes(req, res, parsedUrl, pathname, method) {
       return;
     }
 
-    // Build query based on language
     const nameColumn = languageCode === 'sv' ? 'name_sv' : 'name_en';
     const descColumn = languageCode === 'sv' ? 'description_sv' : 'description_en';
     
-    // Build ORDER BY clause
     let orderBy;
     if (sortColumn === 'name') {
       orderBy = nameColumn;
     } else if (sortColumn === 'article_no') {
-      // For article_no, extract numeric part for proper numerical sorting
-      // This handles formats like "ART-001", "ART-010", etc.
       orderBy = `CAST(SUBSTRING(article_no FROM '\\d+') AS INTEGER)`;
     } else {
       orderBy = sortColumn;
     }
     
     const orderDirection = sortOrder.toUpperCase();
-
-    // Query database for products
     select(
       `SELECT 
         id,
@@ -218,10 +204,8 @@ export function productsRoutes(req, res, parsedUrl, pathname, method) {
       return;
     }
 
-    // Get language from query parameter, default to 'en'
     const languageCode = parsedUrl.query?.lang || 'en';
     
-    // Validate language code
     const validLanguages = ['en', 'sv'];
     if (!validLanguages.includes(languageCode)) {
       sendError(res, 400, 'Invalid Language', 
@@ -233,7 +217,6 @@ export function productsRoutes(req, res, parsedUrl, pathname, method) {
 
     const { name, in_price, price, unit, in_stock, description } = req.body || {};
 
-    // Check if product exists
     selectOne('SELECT id FROM products WHERE id = $1', [productId])
       .then(existingProduct => {
         if (!existingProduct) {
@@ -241,7 +224,6 @@ export function productsRoutes(req, res, parsedUrl, pathname, method) {
           return;
         }
 
-        // Build update query based on language and provided fields
         const nameColumn = languageCode === 'sv' ? 'name_sv' : 'name_en';
         const descColumn = languageCode === 'sv' ? 'description_sv' : 'description_en';
         
@@ -279,7 +261,6 @@ export function productsRoutes(req, res, parsedUrl, pathname, method) {
           return;
         }
 
-        // Add updated_at timestamp
         updates.push(`updated_at = CURRENT_TIMESTAMP`);
         params.push(productId);
 
@@ -322,7 +303,6 @@ export function productsRoutes(req, res, parsedUrl, pathname, method) {
     return;
   }
 
-  // 404 for products routes
   sendError(res, 404, 'Not Found', `Route ${pathname} not found`);
 }
 

@@ -1,13 +1,9 @@
 import { sendResponse, sendError } from '../utils/response.js';
 import jwt from 'jsonwebtoken';
 
-// JWT secret - in production, this should be in .env
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
-/**
- * Auth routes handler
- */
 export function authRoutes(req, res, parsedUrl, pathname, method) {
   /**
    * @swagger
@@ -56,21 +52,17 @@ export function authRoutes(req, res, parsedUrl, pathname, method) {
   if (pathname === '/api/auth/login' && method === 'POST') {
     const { username, password } = req.body || {};
 
-    // Validate input
     if (!username || !password) {
       sendError(res, 400, 'Bad Request', 'Username and password are required');
       return;
     }
 
-    // Hardcoded credentials check
     if (username === 'user' && password === 'user123') {
-      // Create user object (in real app, fetch from database)
       const user = {
         id: 1,
         username: 'user'
       };
 
-      // Generate JWT token
       const token = jwt.sign(
         { id: user.id, username: user.username },
         JWT_SECRET,
@@ -87,7 +79,6 @@ export function authRoutes(req, res, parsedUrl, pathname, method) {
       return;
     }
 
-    // Invalid credentials
     sendError(res, 401, 'Unauthorized', 'Invalid username or password');
     return;
   }
@@ -140,16 +131,9 @@ export function authRoutes(req, res, parsedUrl, pathname, method) {
     return;
   }
 
-  // 404 for auth routes
   sendError(res, 404, 'Not Found', `Route ${pathname} not found`);
 }
 
-/**
- * Middleware to verify JWT token
- * @param {Object} req - Request object
- * @param {Object} res - Response object
- * @returns {Promise<Object|null>} Decoded token or null if invalid
- */
 export async function verifyToken(req, res) {
   const authHeader = req.headers.authorization;
   
