@@ -3,6 +3,7 @@ import { exampleRoutes } from './example.js';
 import { databaseExampleRoutes } from './database-example.js';
 import { termsRoutes } from './terms.js';
 import { productsRoutes } from './products.js';
+import { authRoutes, verifyToken } from './auth.js';
 
 /**
  * Main router function that handles all routes
@@ -67,9 +68,27 @@ export function router(req, res, parsedUrl, pathname, method) {
     return;
   }
 
-  // Products routes
+  // Auth routes (login, verify - no auth required)
+  if (pathname.startsWith('/api/auth')) {
+    authRoutes(req, res, parsedUrl, pathname, method);
+    return;
+  }
+
+  // Products routes (protected - require authentication)
   if (pathname.startsWith('/api/products')) {
-    productsRoutes(req, res, parsedUrl, pathname, method);
+    // Verify token before processing
+    verifyToken(req, res).then(decoded => {
+      if (decoded) {
+        // Token is valid, proceed with route handler
+        productsRoutes(req, res, parsedUrl, pathname, method);
+      }
+      // If token is invalid, verifyToken already sent error response
+      // and decoded will be null, so we don't proceed
+    }).catch(error => {
+      // Handle any unexpected errors during token verification
+      console.error('Token verification error:', error);
+      sendError(res, 500, 'Internal Server Error', 'Error verifying authentication token');
+    });
     return;
   }
 
