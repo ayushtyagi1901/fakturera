@@ -99,6 +99,10 @@ fi
 
 echo -e "${GREEN}Step 11: Create Environment Files${NC}"
 
+# Generate passwords
+DB_PASSWORD_VAL=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
+JWT_SECRET_VAL=$(openssl rand -base64 64 | tr -d "=+/" | cut -c1-50)
+
 # Backend .env
 cat > "$APP_DIR/backend/.env" <<EOF
 NODE_ENV=production
@@ -107,9 +111,16 @@ DB_HOST=postgres
 DB_PORT=5432
 DB_NAME=fakturera
 DB_USER=fakturera_user
-DB_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
-JWT_SECRET=$(openssl rand -base64 64 | tr -d "=+/" | cut -c1-50)
+DB_PASSWORD=${DB_PASSWORD_VAL}
+JWT_SECRET=${JWT_SECRET_VAL}
 JWT_EXPIRES_IN=24h
+EOF
+
+# Root .env for docker-compose (Docker Compose automatically reads this)
+cat > "$APP_DIR/.env" <<EOF
+DB_NAME=fakturera
+DB_USER=fakturera_user
+DB_PASSWORD=${DB_PASSWORD_VAL}
 EOF
 
 # Frontend .env
@@ -120,7 +131,7 @@ EOF
 # Backup script env
 cat > "$APP_DIR/.backup-env" <<EOF
 GCS_BUCKET=${GCS_BUCKET}
-DB_PASSWORD=$(grep DB_PASSWORD "$APP_DIR/backend/.env" | cut -d '=' -f2)
+DB_PASSWORD=${DB_PASSWORD_VAL}
 EOF
 
 chown -R "$DEPLOY_USER:$DEPLOY_USER" "$APP_DIR"
