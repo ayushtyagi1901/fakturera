@@ -107,9 +107,15 @@ function handleRequest(req, res, parsedUrl, pathname, method) {
   // Swagger JSON endpoint
   if (pathname === '/swagger.json') {
     // Dynamically set server URL based on request host
-    const host = req.headers.host || 'localhost:3000';
+    // When behind Nginx, use X-Forwarded-Host or Host header
+    const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
     const protocol = req.headers['x-forwarded-proto'] || (req.connection?.encrypted ? 'https' : 'http');
-    const baseUrl = `${protocol}://${host}`;
+    
+    // Remove port if it's the default HTTP/HTTPS port
+    let baseUrl = `${protocol}://${host}`;
+    if ((protocol === 'http' && host.endsWith(':80')) || (protocol === 'https' && host.endsWith(':443'))) {
+      baseUrl = `${protocol}://${host.replace(/:(80|443)$/, '')}`;
+    }
     
     // Clone swagger spec and update server URLs
     const dynamicSwaggerSpec = JSON.parse(JSON.stringify(swaggerSpec));
