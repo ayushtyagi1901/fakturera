@@ -167,6 +167,25 @@ server {
         add_header Cache-Control "public, immutable";
     }
     
+    # Swagger documentation
+    location /api-docs {
+        proxy_pass http://localhost:3000/api-docs;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+    
+    location /swagger.json {
+        proxy_pass http://localhost:3000/swagger.json;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+    
     # API proxy
     location /api {
         proxy_pass http://localhost:3000;
