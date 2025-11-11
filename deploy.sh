@@ -91,6 +91,9 @@ if [ ! -d "$APP_DIR/.git" ]; then
     sudo -u "$DEPLOY_USER" git clone "$REPO_URL" "$APP_DIR"
 else
     cd "$APP_DIR"
+    # Stash or discard local changes to allow pull
+    sudo -u "$DEPLOY_USER" git stash || true
+    sudo -u "$DEPLOY_USER" git reset --hard origin/main || true
     sudo -u "$DEPLOY_USER" git pull
 fi
 
