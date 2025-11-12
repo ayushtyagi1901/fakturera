@@ -40,7 +40,7 @@
 }
 
 .terms-close-btn {
-  background: #5A9F25;
+  background: rgb(8, 158, 30);
   border: none;
   color: white;
   padding: 16px 40px;
@@ -157,6 +157,19 @@
 
 /* Mobile view optimizations */
 @media (max-width: 767px) {
+  .terms-container .login-navbar-content {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .terms-container .login-hamburger-menu {
+    margin-left: 8px;
+  }
+
+  .terms-container .login-language-switcher {
+    margin-right: 8px;
+  }
+
   .terms-wrapper {
     margin-top: 80px;
     padding: 0 1rem;
@@ -164,8 +177,8 @@
 
   .terms-content-box {
     width: 100%;
-    margin: 20px 0;
-    padding: 1.5rem;
+    margin: 20px 2rem;
+    padding: 2.5rem;
     border-radius: 20px;
   }
 
@@ -175,12 +188,13 @@
   }
 
   .terms-title {
-    font-size: 20px;
+    font-size: 24px;
+    margin-top: 24px;
   }
 
   .terms-close-btn {
-    padding: 12px 28px;
-    font-size: 14px;
+    padding: 16px 40px;
+    font-size: 18px;
     border-radius: 40px;
   }
 

@@ -8,12 +8,12 @@ import './Login.css'
 
 const termsTranslations = {
   en: {
-    title: 'Terms and Conditions',
-    close: 'Close'
+    title: 'Terms',
+    close: 'Close and Go Back'
   },
   sv: {
     title: 'Villkor',
-    close: 'Stäng'
+    close: 'Stäng och gå tillbaka'
   }
 }
 
