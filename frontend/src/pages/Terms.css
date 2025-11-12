@@ -1,4 +1,10 @@
 .terms-container {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.terms-container::before {
+  content: '';
   position: fixed;
   top: 0;
   left: 0;
@@ -11,7 +17,8 @@
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  overflow: auto;
+  z-index: -1;
+  pointer-events: none;
 }
 
 .terms-wrapper {
