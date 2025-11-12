@@ -33,12 +33,24 @@ function Terms() {
       setLoading(true)
       setError(null)
       try {
-        const response = await fetch(`${API_URL}/api/terms?lang=${currentLangCode}`)
-        if (!response.ok) {
-          throw new Error(`Failed to fetch terms: ${response.statusText}`)
+        const useVercelConfig = import.meta.env.VITE_USE_VERCEL_CONFIG === '1'
+        
+        if (useVercelConfig) {
+          const response = await fetch('/terms.json')
+          if (!response.ok) {
+            throw new Error(`Failed to fetch terms: ${response.statusText}`)
+          }
+          const data = await response.json()
+          const content = data[currentLangCode] || data['en'] || ''
+          setTermsContent(content)
+        } else {
+          const response = await fetch(`${API_URL}/api/terms?lang=${currentLangCode}`)
+          if (!response.ok) {
+            throw new Error(`Failed to fetch terms: ${response.statusText}`)
+          }
+          const data = await response.json()
+          setTermsContent(data.content)
         }
-        const data = await response.json()
-        setTermsContent(data.content)
       } catch (err) {
         console.error('Error fetching terms:', err)
         setError(err.message)
