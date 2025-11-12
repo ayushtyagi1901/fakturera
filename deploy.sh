@@ -283,23 +283,14 @@ if ! command -v node &> /dev/null; then
     apt-get install -y nodejs
 fi
 
-echo -e "${GREEN}Step 14: Build Frontend${NC}"
-cd "$APP_DIR/frontend"
-# Only rebuild if .env changed or dist doesn't exist
-REBUILD_NEEDED=false
-if [ ! -d "$APP_DIR/frontend/dist" ]; then
-    REBUILD_NEEDED=true
-elif [ "$APP_DIR/frontend/.env" -nt "$APP_DIR/frontend/dist" ]; then
-    REBUILD_NEEDED=true
-fi
+echo -e "${GREEN}Step 14: Update and Build Frontend${NC}"
+cd "$APP_DIR"
+sudo -u "$DEPLOY_USER" git pull origin main || echo -e "${YELLOW}⚠️  Git pull had issues, continuing...${NC}"
 
-if [ "$REBUILD_NEEDED" = true ] || [ "${FORCE_REBUILD:-false}" = "true" ]; then
-    echo -e "${YELLOW}Rebuilding frontend...${NC}"
-    sudo -u "$DEPLOY_USER" npm install
-    sudo -u "$DEPLOY_USER" npm run build
-else
-    echo -e "${YELLOW}Frontend already built, skipping... (use FORCE_REBUILD=true to force)${NC}"
-fi
+cd "$APP_DIR/frontend"
+echo -e "${YELLOW}Installing dependencies and rebuilding frontend...${NC}"
+sudo -u "$DEPLOY_USER" npm install
+sudo -u "$DEPLOY_USER" npm run build
 
 echo -e "${GREEN}Step 15: Setup Docker Compose${NC}"
 cd "$APP_DIR"
