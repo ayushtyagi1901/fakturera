@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FaFileInvoice, FaUsers, FaBuilding, FaBook, FaListAlt, FaFileInvoiceDollar, FaExclamationCircle, FaGift, FaBoxes, FaUserCheck, FaExchangeAlt, FaSignOutAlt, FaCheck, FaSearch, FaPlus, FaPrint, FaCog, FaSort, FaSortUp, FaSortDown, FaBars } from 'react-icons/fa'
+import { FaFileInvoice, FaUsers, FaBuilding, FaBook, FaListAlt, FaFileInvoiceDollar, FaExclamationCircle, FaGift, FaBoxes, FaUserCheck, FaExchangeAlt, FaSignOutAlt, FaCheck, FaSearch, FaSort, FaSortUp, FaSortDown, FaBars } from 'react-icons/fa'
+import { FaArrowDownLong, FaArrowUpLong, FaArrowsUpDown, FaCirclePlus, FaArrowRight } from 'react-icons/fa6'
+import { IoPrintSharp } from 'react-icons/io5'
+import { IoMdSettings } from 'react-icons/io'
+import { BsThreeDots } from 'react-icons/bs'
 import { useLanguage } from '../contexts/LanguageContext'
 import { useAuth } from '../contexts/AuthContext'
 import API_URL from '../config/api.js'
@@ -35,7 +39,7 @@ const dashboardTranslations = {
     },
     table: {
       article_no: 'Article no',
-      product_service: 'product/service',
+      product_service: 'Product/Service',
       in_price: 'In Price',
       price: 'Price',
       unit: 'Unit',
@@ -99,6 +103,7 @@ function Dashboard() {
   const [saving, setSaving] = useState(false)
   const [isTablet, setIsTablet] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [currentEntryId, setCurrentEntryId] = useState(null)
 
   useEffect(() => {
     const checkViewport = () => {
@@ -182,6 +187,9 @@ function Dashboard() {
         
         setAllProducts(transformedData)
         applyFilters(transformedData, articleNoSearch, productSearch)
+        if (transformedData.length > 0 && currentEntryId === null) {
+          setCurrentEntryId(transformedData[0].id)
+        }
       } catch (err) {
         console.error('Error fetching products:', err)
         setError(err.message)
@@ -192,6 +200,12 @@ function Dashboard() {
 
     fetchProducts()
   }, [currentLangCode, sortColumn, sortDirection, token, logout, navigate])
+
+  useEffect(() => {
+    if (tableData.length > 0 && currentEntryId === null) {
+      setCurrentEntryId(tableData[0].id)
+    }
+  }, [tableData, currentEntryId])
 
   useEffect(() => {
     setArticleNoSearch('')
@@ -235,6 +249,25 @@ function Dashboard() {
 
   const getSortIcon = (column) => {
     const apiColumn = column === 'articleNo' ? 'article_no' : 'name'
+    
+    if (column === 'articleNo') {
+      if (sortColumn !== apiColumn) {
+        return <FaArrowsUpDown className="dashboard-sort-icon dashboard-article-sort-icon" />
+      }
+      return sortDirection === 'asc' 
+        ? <FaArrowUpLong className="dashboard-sort-icon dashboard-article-sort-icon" />
+        : <FaArrowDownLong className="dashboard-sort-icon dashboard-article-sort-icon" />
+    }
+    
+    if (column === 'productService') {
+      if (sortColumn !== apiColumn) {
+        return <FaArrowsUpDown className="dashboard-sort-icon dashboard-product-sort-icon" />
+      }
+      return sortDirection === 'asc' 
+        ? <FaArrowUpLong className="dashboard-sort-icon dashboard-product-sort-icon" />
+        : <FaArrowDownLong className="dashboard-sort-icon dashboard-product-sort-icon" />
+    }
+    
     if (sortColumn !== apiColumn) {
       return <FaSort className="dashboard-sort-icon" />
     }
@@ -487,7 +520,7 @@ function Dashboard() {
                     <FaCheck className="dashboard-menu-check" />
                   </div>
                 )}
-                <FaFileInvoice className="dashboard-menu-icon" />
+                <FaFileInvoice className="dashboard-menu-icon dashboard-menu-icon-violet" />
                 <span>{getTranslation('menu.invoices')}</span>
               </div>
               <div className={`dashboard-menu-item ${activeMenu === 'customers' ? 'active' : ''}`} onClick={() => setActiveMenu('customers')}>
@@ -496,7 +529,7 @@ function Dashboard() {
                     <FaCheck className="dashboard-menu-check" />
                   </div>
                 )}
-                <FaUsers className="dashboard-menu-icon" />
+                <FaUsers className="dashboard-menu-icon dashboard-menu-icon-indigo" />
                 <span>{getTranslation('menu.customers')}</span>
               </div>
               <div className={`dashboard-menu-item ${activeMenu === 'My businesses' ? 'active' : ''}`} onClick={() => setActiveMenu('My businesses')}>
@@ -505,7 +538,7 @@ function Dashboard() {
                     <FaCheck className="dashboard-menu-check" />
                   </div>
                 )}
-                <FaBuilding className="dashboard-menu-icon" />
+                <FaBuilding className="dashboard-menu-icon dashboard-menu-icon-blue" />
                 <span>{getTranslation('menu.businesses')}</span>
               </div>
               <div className={`dashboard-menu-item ${activeMenu === 'Invoice journal' ? 'active' : ''}`} onClick={() => setActiveMenu('Invoice journal')}>
@@ -514,7 +547,7 @@ function Dashboard() {
                     <FaCheck className="dashboard-menu-check" />
                   </div>
                 )}
-                <FaBook className="dashboard-menu-icon" />
+                <FaBook className="dashboard-menu-icon dashboard-menu-icon-green" />
                 <span>{getTranslation('menu.journal')}</span>
               </div>
               <div className={`dashboard-menu-item ${activeMenu === 'Price list' ? 'active' : ''}`} onClick={() => setActiveMenu('Price list')}>
@@ -523,7 +556,7 @@ function Dashboard() {
                     <FaCheck className="dashboard-menu-check" />
                   </div>
                 )}
-                <FaListAlt className="dashboard-menu-icon" />
+                <FaListAlt className="dashboard-menu-icon dashboard-menu-icon-yellow" />
                 <span>{getTranslation('menu.price_list')}</span>
               </div>
               <div className={`dashboard-menu-item ${activeMenu === 'Multiple invoicing' ? 'active' : ''}`} onClick={() => setActiveMenu('Multiple invoicing')}>
@@ -532,7 +565,7 @@ function Dashboard() {
                     <FaCheck className="dashboard-menu-check" />
                   </div>
                 )}
-                <FaFileInvoiceDollar className="dashboard-menu-icon" />
+                <FaFileInvoiceDollar className="dashboard-menu-icon dashboard-menu-icon-orange" />
                 <span>{getTranslation('menu.multiple_invoicing')}</span>
               </div>
               <div className={`dashboard-menu-item ${activeMenu === 'Unpaid invoices' ? 'active' : ''}`} onClick={() => setActiveMenu('Unpaid invoices')}>
@@ -541,7 +574,7 @@ function Dashboard() {
                     <FaCheck className="dashboard-menu-check" />
                   </div>
                 )}
-                <FaExclamationCircle className="dashboard-menu-icon" />
+                <FaExclamationCircle className="dashboard-menu-icon dashboard-menu-icon-red" />
                 <span>{getTranslation('menu.unpaid')}</span>
               </div>
               <div className={`dashboard-menu-item ${activeMenu === 'Offer' ? 'active' : ''}`} onClick={() => setActiveMenu('Offer')}>
@@ -550,7 +583,7 @@ function Dashboard() {
                     <FaCheck className="dashboard-menu-check" />
                   </div>
                 )}
-                <FaGift className="dashboard-menu-icon" />
+                <FaGift className="dashboard-menu-icon dashboard-menu-icon-violet" />
                 <span>{getTranslation('menu.offer')}</span>
               </div>
               <div className={`dashboard-menu-item ${activeMenu === 'Inventory Control' ? 'active' : ''}`} onClick={() => setActiveMenu('Inventory Control')}>
@@ -559,7 +592,7 @@ function Dashboard() {
                     <FaCheck className="dashboard-menu-check" />
                   </div>
                 )}
-                <FaBoxes className="dashboard-menu-icon" />
+                <FaBoxes className="dashboard-menu-icon dashboard-menu-icon-indigo" />
                 <span>{getTranslation('menu.inventory')}</span>
               </div>
               <div className={`dashboard-menu-item ${activeMenu === 'Member Invoicing' ? 'active' : ''}`} onClick={() => setActiveMenu('Member Invoicing')}>
@@ -568,7 +601,7 @@ function Dashboard() {
                     <FaCheck className="dashboard-menu-check" />
                   </div>
                 )}
-                <FaUserCheck className="dashboard-menu-icon" />
+                <FaUserCheck className="dashboard-menu-icon dashboard-menu-icon-blue" />
                 <span>{getTranslation('menu.member')}</span>
               </div>
               <div className={`dashboard-menu-item ${activeMenu === 'Import/export' ? 'active' : ''}`} onClick={() => setActiveMenu('Import/export')}>
@@ -577,7 +610,7 @@ function Dashboard() {
                     <FaCheck className="dashboard-menu-check" />
                   </div>
                 )}
-                <FaExchangeAlt className="dashboard-menu-icon" />
+                <FaExchangeAlt className="dashboard-menu-icon dashboard-menu-icon-green" />
                 <span>{getTranslation('menu.import_export')}</span>
               </div>
               <div 
@@ -592,7 +625,7 @@ function Dashboard() {
                     <FaCheck className="dashboard-menu-check" />
                   </div>
                 )}
-                <FaSignOutAlt className="dashboard-menu-icon" />
+                <FaSignOutAlt className="dashboard-menu-icon dashboard-menu-icon-yellow" />
                 <span>{getTranslation('menu.logout')}</span>
               </div>
             </nav>
@@ -624,13 +657,13 @@ function Dashboard() {
                 </div>
                 <div className="dashboard-action-buttons dashboard-action-buttons-mobile">
                   <button className="dashboard-action-button">
-                    <FaPlus className="dashboard-action-icon" />
+                    <FaCirclePlus className="dashboard-action-icon dashboard-add-icon" />
                   </button>
                   <button className="dashboard-action-button">
-                    <FaPrint className="dashboard-action-icon" />
+                    <IoPrintSharp className="dashboard-action-icon dashboard-print-icon" />
                   </button>
                   <button className="dashboard-action-button">
-                    <FaCog className="dashboard-action-icon" />
+                    <IoMdSettings className="dashboard-action-icon dashboard-settings-icon" />
                   </button>
                 </div>
               </>
@@ -650,15 +683,15 @@ function Dashboard() {
                   <div className="dashboard-action-buttons">
                     <button className="dashboard-action-button">
                       {!isTablet && <span>{getTranslation('button.new_product')}</span>}
-                      <FaPlus className="dashboard-action-icon" />
+                      <FaCirclePlus className="dashboard-action-icon dashboard-add-icon" />
                     </button>
                     <button className="dashboard-action-button">
                       {!isTablet && <span>{getTranslation('button.print_list')}</span>}
-                      <FaPrint className="dashboard-action-icon" />
+                      <IoPrintSharp className="dashboard-action-icon dashboard-print-icon" />
                     </button>
                     <button className="dashboard-action-button">
                       {!isTablet && <span>{getTranslation('button.advanced_mode')}</span>}
-                      <FaCog className="dashboard-action-icon" />
+                      <IoMdSettings className="dashboard-action-icon dashboard-settings-icon" />
                     </button>
                   </div>
                 </div>
@@ -691,44 +724,113 @@ function Dashboard() {
                   </th>
                   {!isTablet && !isMobile && <th className="dashboard-col-inprice">{getTranslation('table.in_price')}</th>}
                   <th className="dashboard-col-price">{getTranslation('table.price')}</th>
+                  {isMobile && <th className="dashboard-col-actions"></th>}
                   {!isMobile && <th className="dashboard-col-unit">{getTranslation('table.unit')}</th>}
                   {!isMobile && <th className="dashboard-col-stock">{getTranslation('table.in_stock')}</th>}
                   {!isTablet && !isMobile && <th className="dashboard-col-description">{getTranslation('table.description')}</th>}
+                  {!isMobile && <th className="dashboard-col-actions"></th>}
                 </tr>
               </thead>
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan={isMobile ? 2 : isTablet ? 5 : 7} style={{ textAlign: 'center', padding: '20px' }}>
+                    <td colSpan={isMobile ? 3 : isTablet ? 6 : 8} style={{ textAlign: 'center', padding: '20px' }}>
                       Loading products...
                     </td>
                   </tr>
                 )}
                 {error && (
                   <tr>
-                    <td colSpan={isMobile ? 2 : isTablet ? 5 : 7} style={{ textAlign: 'center', padding: '20px', color: 'red' }}>
+                    <td colSpan={isMobile ? 3 : isTablet ? 6 : 8} style={{ textAlign: 'center', padding: '20px', color: 'red' }}>
                       Error: {error}
                     </td>
                   </tr>
                 )}
                 {!loading && !error && tableData.length === 0 && (
                   <tr>
-                    <td colSpan={isMobile ? 2 : isTablet ? 5 : 7} style={{ textAlign: 'center', padding: '20px' }}>
+                    <td colSpan={isMobile ? 3 : isTablet ? 6 : 8} style={{ textAlign: 'center', padding: '20px' }}>
                       No products found
                     </td>
                   </tr>
                 )}
-                {!loading && !error && tableData.map((row) => (
-                  <tr key={row.id}>
-                    {!isMobile && renderEditableCell(row, 'articleNo', row.articleNo)}
-                    {renderEditableCell(row, 'productService', row.productService)}
+                {!loading && !error && tableData.map((row, index) => {
+                  const isCurrentEntry = currentEntryId === row.id
+                  return (
+                  <tr key={row.id} className={isCurrentEntry ? 'dashboard-current-row' : ''} onClick={(e) => {
+                    if (!e.target.closest('input') && !e.target.closest('.dashboard-actions-icon')) {
+                      setCurrentEntryId(row.id)
+                    }
+                  }}>
+                    {!isMobile && (
+                      <td className="dashboard-col-article dashboard-article-cell">
+                        {isCurrentEntry && (
+                          <FaArrowRight className="dashboard-current-entry-icon" />
+                        )}
+                        {row.articleNo}
+                      </td>
+                    )}
+                    {isMobile ? (
+                      <td className="dashboard-col-product dashboard-article-cell" onClick={(e) => {
+                        if (!e.target.closest('input')) {
+                          setEditingCell({ rowId: row.id, field: 'productService' })
+                          setEditingValue(row.productService || '')
+                        }
+                      }}>
+                        {isCurrentEntry && (
+                          <FaArrowRight className="dashboard-current-entry-icon" />
+                        )}
+                        {editingCell?.rowId === row.id && editingCell?.field === 'productService' ? (
+                          <input
+                            type="text"
+                            value={editingValue}
+                            onChange={(e) => setEditingValue(e.target.value)}
+                            onBlur={() => handleCellSave(row.id, 'productService')}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleCellSave(row.id, 'productService')
+                              } else if (e.key === 'Escape') {
+                                handleCellCancel()
+                              }
+                            }}
+                            autoFocus
+                            style={{
+                              width: '100%',
+                              padding: '4px',
+                              border: '1px solid #3b82f6',
+                              borderRadius: '4px',
+                              fontSize: '14px'
+                            }}
+                            disabled={saving}
+                          />
+                        ) : (
+                          <span>{row.productService}</span>
+                        )}
+                      </td>
+                    ) : (
+                      renderEditableCell(row, 'productService', row.productService)
+                    )}
                     {!isTablet && !isMobile && renderEditableCell(row, 'inPrice', row.inPrice !== null && row.inPrice !== undefined ? Number(row.inPrice).toFixed(2) : '-')}
-                    {renderEditableCell(row, 'price', Number(row.price).toFixed(2))}
+                    {isMobile ? (
+                      <>
+                        {renderEditableCell(row, 'price', Number(row.price).toFixed(2))}
+                        <td className="dashboard-col-actions">
+                          <BsThreeDots className="dashboard-actions-icon" />
+                        </td>
+                      </>
+                    ) : (
+                      renderEditableCell(row, 'price', Number(row.price).toFixed(2))
+                    )}
                     {!isMobile && renderEditableCell(row, 'unit', row.unit || '-')}
                     {!isMobile && renderEditableCell(row, 'inStock', row.inStock)}
                     {!isTablet && !isMobile && renderEditableCell(row, 'description', row.description || '-')}
+                    {!isMobile && (
+                      <td className="dashboard-col-actions">
+                        <BsThreeDots className="dashboard-actions-icon" />
+                      </td>
+                    )}
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>
