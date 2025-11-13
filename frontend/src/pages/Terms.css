@@ -164,6 +164,13 @@
 
 /* Mobile view optimizations */
 @media (max-width: 767px) {
+  .terms-container::before {
+    background-attachment: scroll;
+    bottom: auto;
+    height: 120vh;
+    min-height: 100vh;
+  }
+
   .terms-container .login-navbar-content {
     padding-left: 24px;
     padding-right: 24px;
